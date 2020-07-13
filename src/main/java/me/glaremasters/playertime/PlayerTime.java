@@ -12,6 +12,7 @@ import me.glaremasters.playertime.database.yml.YamlDatabaseProvider;
 import me.glaremasters.playertime.events.GUI;
 import me.glaremasters.playertime.events.Leave;
 import me.glaremasters.playertime.utils.SaveTask;
+import me.glaremasters.playertime.utils.TimeUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -20,8 +21,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
-
-import static me.glaremasters.playertime.commands.CMDCheck.ticksToMillis;
 
 public final class PlayerTime extends JavaPlugin {
 
@@ -77,15 +76,15 @@ public final class PlayerTime extends JavaPlugin {
     public void onDisable() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (instance.getDatabase().hasTime(player.getUniqueId().toString())) {
-                instance.getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(ticksToMillis(player)));
+                instance.getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
             } else {
-                instance.getDatabase().insertUser(player.getUniqueId().toString(), String.valueOf(ticksToMillis(player)));
+                instance.getDatabase().insertUser(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
             }
         }
     }
 
     public void setDatabaseType() {
-        switch (getConfig().getString("database.type",  "yml").toLowerCase()) {
+        switch (getConfig().getString("database.type", "yml").toLowerCase()) {
             case "mysql":
                 database = new MySQLDatabaseProvider();
                 break;
@@ -109,7 +108,7 @@ public final class PlayerTime extends JavaPlugin {
     }
 
     private void checkConfig() {
-        if (!getConfig().isSet("config-version") || getConfig().getInt("config-version") <= 3) {
+        if (!getConfig().isSet("config-version") || getConfig().getInt("config-version") < 3) {
             File oldConfig = new File(getDataFolder(), "config.yml");
             File newConfig = new File(getDataFolder(), "config-old.yml");
             oldConfig.renameTo(newConfig);

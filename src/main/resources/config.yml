@@ -44,4 +44,4 @@ messages:
   no-playtime-data: "There was no saved playtime data for this player"
   config-reload: "PlayerTime config has been reloaded!"
 
-placeholder-format: "hh:mm:ss"
+placeholder-format: "dd:HH:mm:ss"

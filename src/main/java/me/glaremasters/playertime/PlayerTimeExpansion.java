@@ -1,6 +1,7 @@
 package me.glaremasters.playertime;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import me.glaremasters.playertime.utils.TimeUtil;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.entity.Player;
 
@@ -32,8 +33,8 @@ public class PlayerTimeExpansion extends PlaceholderExpansion {
             return "not_enough_args";
 
         if (args[0].equalsIgnoreCase("time"))
-            return DurationFormatUtils.formatDuration(Long.parseLong(playerTime.getDatabase().getTime(player.getUniqueId().toString())),
-                    playerTime.getConfig().getString("placeholder-format", "hh:mm:ss"));
+            return DurationFormatUtils.formatDuration(TimeUtil.getTimeFromStatistics(player),
+                    playerTime.getConfig().getString("placeholder-format", "H:m:s"));
 
         return "invalid_param";
     }

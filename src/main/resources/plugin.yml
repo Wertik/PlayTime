@@ -3,6 +3,8 @@ version: ${project.version}
 main: me.glaremasters.playertime.PlayerTime
 authors: [blockslayer22, Wertik1206]
 description: PlayerTime
+softdepend:
+  - PlaceholderAPI
 
 commands:
   ptcheck:

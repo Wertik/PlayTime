@@ -1,6 +1,7 @@
 package me.glaremasters.playertime.commands;
 
 import me.glaremasters.playertime.PlayerTime;
+import me.glaremasters.playertime.utils.TimeUtil;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -67,18 +68,6 @@ public class CMDCheck implements CommandExecutor {
         return true;
     }
 
-
-    public static int ticksToMillis(Player player) {
-        int time;
-        try {
-            time = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
-        } catch (NoSuchFieldError e) {
-            time = player.getStatistic(Statistic.valueOf("PLAY_ONE_TICK"));
-        }
-        int seconds = time / 20;
-        return seconds * 1000;
-    }
-
     public static String timeFormat(Integer time) {
         String endFormat;
         String amount = DurationFormatUtils.formatDuration(time, "d:H:m:s");
@@ -92,7 +81,7 @@ public class CMDCheck implements CommandExecutor {
     }
 
     public static void messageConvert(CommandSender sender, Player player) {
-        String endTime = DurationFormatUtils.formatDuration(ticksToMillis(player), "d:H:m:s");
+        String endTime = DurationFormatUtils.formatDuration(TimeUtil.getTimeFromStatistics(player), "d:H:m:s");
         String[] parts = endTime.split(":");
         String days = parts[0];
         String hours = parts[1];
