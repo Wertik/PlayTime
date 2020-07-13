@@ -23,6 +23,7 @@ public class GUI implements Listener {
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
+
         if (uuids.contains(player.getUniqueId())) {
             event.setCancelled(true);
             event.setResult(Event.Result.DENY);

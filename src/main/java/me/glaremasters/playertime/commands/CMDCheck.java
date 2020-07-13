@@ -18,40 +18,49 @@ import static me.glaremasters.playertime.utils.ColorUtil.color;
  */
 public class CMDCheck implements CommandExecutor {
 
-    private FileConfiguration config = PlayerTime.getI().getConfig();
+    private final FileConfiguration config = PlayerTime.getInstance().getConfig();
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
+
             if (!player.hasPermission("playertime.check")) {
                 return true;
             }
+
             if (args.length < 1) {
                 messageConvert(sender, player);
                 return true;
             }
+
             if (args.length == 1) {
                 if (!player.hasPermission("playertime.others")) {
                     return true;
                 }
+
                 if (Bukkit.getServer().getPlayer(args[0]) != null) {
                     Player target = Bukkit.getServer().getPlayer(args[0]);
                     messageConvert(sender, target);
                     return true;
                 }
+
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[0]);
+
                 if (!offlinePlayer.hasPlayedBefore()) {
                     player.sendMessage(color(config.getString("messages.never-played-before")));
                     return true;
                 }
-                if (!PlayerTime.getI().getDatabase().hasTime(player.getUniqueId().toString())) {
+
+                if (!PlayerTime.getInstance().getDatabase().hasTime(player.getUniqueId().toString())) {
                     player.sendMessage(color(config.getString("messages.no-playtime-data")));
                     return true;
                 }
+
                 messageConvertOffline(sender, offlinePlayer);
                 return true;
             }
+
             player.sendMessage(color(config.getString("messages.incorrect-usage")));
             return true;
         }
@@ -67,8 +76,7 @@ public class CMDCheck implements CommandExecutor {
             time = player.getStatistic(Statistic.valueOf("PLAY_ONE_TICK"));
         }
         int seconds = time / 20;
-        int millis = seconds * 1000;
-        return millis;
+        return seconds * 1000;
     }
 
     public static String timeFormat(Integer time) {
@@ -79,7 +87,7 @@ public class CMDCheck implements CommandExecutor {
         String hours = parts[1];
         String minutes = parts[2];
         String sec = parts[3];
-        endFormat = color(PlayerTime.getI().getConfig().getString("gui.time-format").replace("{days}", days).replace("{hours}", hours).replace("{minutes}", minutes).replace("{seconds}", sec));
+        endFormat = color(PlayerTime.getInstance().getConfig().getString("gui.time-format").replace("{days}", days).replace("{hours}", hours).replace("{minutes}", minutes).replace("{seconds}", sec));
         return endFormat;
     }
 
@@ -90,17 +98,17 @@ public class CMDCheck implements CommandExecutor {
         String hours = parts[1];
         String minutes = parts[2];
         String sec = parts[3];
-        sender.sendMessage(color(PlayerTime.getI().getConfig().getString("format").replace("{days}", days).replace("{hours}", hours).replace("{minutes}", minutes).replace("{seconds}", sec).replace("{name}", player.getName())));
+        sender.sendMessage(color(PlayerTime.getInstance().getConfig().getString("format").replace("{days}", days).replace("{hours}", hours).replace("{minutes}", minutes).replace("{seconds}", sec).replace("{name}", player.getName())));
     }
 
     public static void messageConvertOffline(CommandSender sender, OfflinePlayer player) {
-        String endTime = DurationFormatUtils.formatDuration(Integer.valueOf(PlayerTime.getI().getDatabase().getTime(player.getUniqueId().toString())), "d:H:m:s");
+        String endTime = DurationFormatUtils.formatDuration(Integer.valueOf(PlayerTime.getInstance().getDatabase().getTime(player.getUniqueId().toString())), "d:H:m:s");
         String[] parts = endTime.split(":");
         String days = parts[0];
         String hours = parts[1];
         String minutes = parts[2];
         String sec = parts[3];
-        sender.sendMessage(color(PlayerTime.getI().getConfig().getString("format").replace("{days}", days).replace("{hours}", hours).replace("{minutes}", minutes).replace("{seconds}", sec).replace("{name}", player.getName())));
+        sender.sendMessage(color(PlayerTime.getInstance().getConfig().getString("format").replace("{days}", days).replace("{hours}", hours).replace("{minutes}", minutes).replace("{seconds}", sec).replace("{name}", player.getName())));
     }
 
 }

@@ -14,7 +14,7 @@ import static me.glaremasters.playertime.commands.CMDCheck.ticksToMillis;
  */
 public class Leave implements Listener {
 
-    private PlayerTime playerTime = PlayerTime.getI();
+    private final PlayerTime playerTime = PlayerTime.getInstance();
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
@@ -24,8 +24,6 @@ public class Leave implements Listener {
         } else {
             playerTime.getDatabase().insertUser(player.getUniqueId().toString(),String.valueOf(ticksToMillis(player)));
         }
-
-
     }
 
     @EventHandler
@@ -37,5 +35,4 @@ public class Leave implements Listener {
             playerTime.getDatabase().insertUser(player.getUniqueId().toString(),String.valueOf(ticksToMillis(player)));
         }
     }
-
 }

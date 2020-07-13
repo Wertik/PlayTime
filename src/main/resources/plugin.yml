@@ -1,9 +1,8 @@
 name: PlayerTime
 version: ${project.version}
 main: me.glaremasters.playertime.PlayerTime
-authors: [blockslayer22]
+authors: [blockslayer22, Wertik1206]
 description: PlayerTime
-website: https://glaremasters.me/discord
 
 commands:
   ptcheck:

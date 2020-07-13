@@ -7,14 +7,11 @@ import me.glaremasters.playertime.commands.CMDCheck;
 import me.glaremasters.playertime.commands.CMDReload;
 import me.glaremasters.playertime.commands.CMDTop;
 import me.glaremasters.playertime.database.DatabaseProvider;
-import me.glaremasters.playertime.database.mysql.MySQL;
-import me.glaremasters.playertime.database.yml.YML;
-import me.glaremasters.playertime.events.Announcement;
+import me.glaremasters.playertime.database.mysql.MySQLDatabaseProvider;
+import me.glaremasters.playertime.database.yml.YamlDatabaseProvider;
 import me.glaremasters.playertime.events.GUI;
 import me.glaremasters.playertime.events.Leave;
-import me.glaremasters.playertime.updater.SpigotUpdater;
 import me.glaremasters.playertime.utils.SaveTask;
-import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -22,17 +19,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.logging.Level;
 
 import static me.glaremasters.playertime.commands.CMDCheck.ticksToMillis;
-import static me.glaremasters.playertime.utils.AnnouncementUtil.unescape_perl_string;
 
 public final class PlayerTime extends JavaPlugin {
 
-    private static PlayerTime playerTime;
+    private static PlayerTime instance;
+
+    public static PlayerTime getInstance() {
+        return instance;
+    }
 
     private static TaskChainFactory taskChainFactory;
 
@@ -40,23 +37,18 @@ public final class PlayerTime extends JavaPlugin {
         return taskChainFactory.newChain();
     }
 
+    public File playTime = new File(this.getDataFolder(), "playtime.yml");
+    public YamlConfiguration config = YamlConfiguration.loadConfiguration(this.playTime);
+
     public DatabaseProvider getDatabase() {
         return database;
     }
 
     private DatabaseProvider database;
 
-    public static PlayerTime getI() {
-        return playerTime;
-    }
-
-    public File playTime = new File(this.getDataFolder(), "playtime.yml");
-    public YamlConfiguration playTimeConfig = YamlConfiguration.loadConfiguration(this.playTime);
-
     @Override
     public void onEnable() {
-
-        playerTime = this;
+        instance = this;
 
         checkConfig();
         saveDefaultConfig();
@@ -64,13 +56,14 @@ public final class PlayerTime extends JavaPlugin {
 
         taskChainFactory = BukkitTaskChainFactory.create(this);
 
-        SpigotUpdater updater = new SpigotUpdater(this, 58915);
-        updateCheck(updater);
-
         setDatabaseType();
 
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            getLogger().info("Found PlaceholderAPI. Registering placeholders.");
+            new PlayerTimeExpansion().register();
+        }
+
         getServer().getPluginManager().registerEvents(new Leave(), this);
-        getServer().getPluginManager().registerEvents(new Announcement(this), this);
         getServer().getPluginManager().registerEvents(new GUI(), this);
 
         getCommand("ptcheck").setExecutor(new CMDCheck());
@@ -78,30 +71,29 @@ public final class PlayerTime extends JavaPlugin {
         getCommand("ptreload").setExecutor(new CMDReload(this));
 
         SaveTask.startTask();
-
     }
 
     @Override
     public void onDisable() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (playerTime.getDatabase().hasTime(player.getUniqueId().toString())) {
-                playerTime.getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(ticksToMillis(player)));
+            if (instance.getDatabase().hasTime(player.getUniqueId().toString())) {
+                instance.getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(ticksToMillis(player)));
             } else {
-                playerTime.getDatabase().insertUser(player.getUniqueId().toString(),String.valueOf(ticksToMillis(player)));
+                instance.getDatabase().insertUser(player.getUniqueId().toString(), String.valueOf(ticksToMillis(player)));
             }
         }
     }
 
     public void setDatabaseType() {
-        switch (getConfig().getString("database.type").toLowerCase()) {
+        switch (getConfig().getString("database.type",  "yml").toLowerCase()) {
             case "mysql":
-                database = new MySQL();
+                database = new MySQLDatabaseProvider();
                 break;
             case "yml":
-                database = new YML();
+                database = new YamlDatabaseProvider();
                 break;
             default:
-                database = new YML();
+                database = new YamlDatabaseProvider();
                 break;
         }
         database.initialize();
@@ -109,51 +101,15 @@ public final class PlayerTime extends JavaPlugin {
 
     public void saveTime() {
         try {
-            playTimeConfig.save(playTime);
+            config.save(playTime);
         } catch (IOException e) {
             getLogger().log(Level.WARNING, "Could not save PlayTime Data!");
             e.printStackTrace();
         }
     }
 
-    private void updateCheck(SpigotUpdater updater) {
-        try {
-            if (updater.checkForUpdates()) {
-                getLogger().info("You appear to be running a version other than our latest stable release." + " You can download our newest version at: " + updater.getResourceURL());
-            }
-        } catch (Exception ex) {
-            getLogger().info("Could not check for updates! Stacktrace:");
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * Grab the announcement from the API
-     *
-     * @return announcement in string text form
-     */
-    public String getAnnouncements() {
-        String announcement = "";
-        try {
-            URL url = new URL("https://glaremasters.me/api/announcements/playertime/?id=" + getDescription()
-                    .getVersion());
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestProperty("User-Agent",
-                    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-            try (InputStream in = con.getInputStream()) {
-                String encoding = con.getContentEncoding();
-                encoding = encoding == null ? "UTF-8" : encoding;
-                announcement = unescape_perl_string(IOUtils.toString(in, encoding));
-                con.disconnect();
-            }
-        } catch (Exception exception) {
-            announcement = "Could not fetch announcements!";
-        }
-        return announcement;
-    }
-
     private void checkConfig() {
-        if (!getConfig().isSet("config-version") || getConfig().getInt("config-version") != 2) {
+        if (!getConfig().isSet("config-version") || getConfig().getInt("config-version") <= 3) {
             File oldConfig = new File(getDataFolder(), "config.yml");
             File newConfig = new File(getDataFolder(), "config-old.yml");
             oldConfig.renameTo(newConfig);

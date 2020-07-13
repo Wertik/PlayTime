@@ -1,7 +1,7 @@
 # PlayerTime ${project.version}
 
 # Do not change this
-config-version: 2
+config-version: 3
 
 plugin-prefix: "[&dPlayer&eTime&f]"
 
@@ -43,3 +43,5 @@ messages:
   never-played-before: "Data for this player was not found. Never played?"
   no-playtime-data: "There was no saved playtime data for this player"
   config-reload: "PlayerTime config has been reloaded!"
+
+placeholder-format: "hh:mm:ss"

@@ -23,5 +23,4 @@ class Query {
     static final String GET_TIME = "SELECT `time` FROM `playertime` WHERE uuid=?";
 
     static final String GET_TOP_TEN = "SELECT * FROM `playertime` ORDER BY `time` DESC LIMIT 10";
-
 }

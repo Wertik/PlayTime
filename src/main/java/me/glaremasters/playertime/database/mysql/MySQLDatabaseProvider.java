@@ -4,7 +4,6 @@ import com.sun.rowset.CachedRowSetImpl;
 import com.zaxxer.hikari.HikariDataSource;
 import me.glaremasters.playertime.PlayerTime;
 import me.glaremasters.playertime.database.DatabaseProvider;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 
 import javax.sql.rowset.CachedRowSet;
@@ -12,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -21,14 +19,14 @@ import java.util.Map;
  * Date: 7/19/2018
  * Time: 10:19 PM
  */
-public class MySQL implements DatabaseProvider {
+public class MySQLDatabaseProvider implements DatabaseProvider {
 
     private HikariDataSource hikari;
 
     @Override
     public void initialize() {
 
-        ConfigurationSection databaseSection = PlayerTime.getI().getConfig().getConfigurationSection("database");
+        ConfigurationSection databaseSection = PlayerTime.getInstance().getConfig().getConfigurationSection("database");
         if (databaseSection == null) {
             throw new IllegalStateException("MySQL not configured correctly. Cannot continue.");
         }
@@ -82,9 +80,8 @@ public class MySQL implements DatabaseProvider {
         Map<String, Integer> topTen = new LinkedHashMap<>();
         try {
             ResultSet rs = executeQuery(Query.GET_TOP_TEN);
-            while (rs.next()) {
-                topTen.put(rs.getString("uuid"), Integer.valueOf(rs.getString("time")));
-            }
+            if (rs == null) return topTen;
+            topTen.put(rs.getString("uuid"), Integer.valueOf(rs.getString("time")));
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -102,9 +99,8 @@ public class MySQL implements DatabaseProvider {
     public String getTime(String uuid) {
         try {
             ResultSet rs = executeQuery(Query.GET_TIME, uuid);
-            while (rs.next()) {
-                return rs.getString("time");
-            }
+            if (rs == null) return "";
+            return rs.getString("time");
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -152,5 +148,4 @@ public class MySQL implements DatabaseProvider {
 
         return null;
     }
-
 }

@@ -4,16 +4,15 @@ import me.glaremasters.playertime.PlayerTime;
 import me.glaremasters.playertime.database.DatabaseProvider;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by GlareMasters
  * Date: 7/19/2018
  * Time: 10:18 PM
  */
-public class YML implements DatabaseProvider {
+public class YamlDatabaseProvider implements DatabaseProvider {
 
-    private PlayerTime playerTime = PlayerTime.getI();
+    private final PlayerTime playerTime = PlayerTime.getInstance();
 
     @Override
     public void initialize() {
@@ -22,32 +21,32 @@ public class YML implements DatabaseProvider {
 
     @Override
     public void insertUser(String uuid, String time) {
-        playerTime.playTimeConfig.set(uuid, time);
+        playerTime.config.set(uuid, time);
         playerTime.saveTime();
     }
 
     @Override
     public boolean hasTime(String uuid) {
-        return PlayerTime.getI().playTimeConfig.getString(uuid) != null;
+        return PlayerTime.getInstance().config.getString(uuid) != null;
     }
 
     @Override
     public void setTime(String time, String uuid) {
-        playerTime.playTimeConfig.set(time, uuid);
+        playerTime.config.set(time, uuid);
         playerTime.saveTime();
     }
 
     @Override
     public String getTime(String uuid) {
-        return PlayerTime.getI().playTimeConfig.getString(uuid);
+        return PlayerTime.getInstance().config.getString(uuid);
     }
 
     @Override
     public Map<String, Integer> getTopTen() {
         Map<String, Integer> topTen = new LinkedHashMap<>();
 
-        for (String key : playerTime.playTimeConfig.getKeys(false)) {
-            topTen.put(key, Integer.valueOf(playerTime.playTimeConfig.getString(key)));
+        for (String key : playerTime.config.getKeys(false)) {
+            topTen.put(key, Integer.valueOf(playerTime.config.getString(key)));
         }
 
         List<Map.Entry<String, Integer>> list = new LinkedList<>(topTen.entrySet());

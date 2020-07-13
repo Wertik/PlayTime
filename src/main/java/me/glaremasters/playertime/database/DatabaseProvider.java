@@ -20,6 +20,4 @@ public interface DatabaseProvider {
     String getTime(String uuid);
 
     Map<String, Integer> getTopTen();
-
-
 }

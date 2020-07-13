@@ -36,52 +36,52 @@ public class CMDTop implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        FileConfiguration c = playerTime.getConfig();
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
-            if (!player.hasPermission("playertime.top")) return true;
-            if (args.length != 0) return true;
-            if (!c.getString("leaderboard-type").equalsIgnoreCase("gui") && !c.getString("leaderboard-type").equalsIgnoreCase("text")) return true;
-            if (c.getString("leaderboard-type").equalsIgnoreCase("gui")) {
-                Inventory top = Bukkit.createInventory(null, 9, color(c.getString("gui.title")));
-                Map<String, Integer> map = playerTime.getDatabase().getTopTen();
-                ItemStack material = new ItemStack(Material.getMaterial(c.getString("gui.item.material")));
-                ItemMeta meta = material.getItemMeta();
-                int size;
-                if (map.size() > 9) {
-                    size = 9;
-                } else {
-                    size = map.size();
+        FileConfiguration config = playerTime.getConfig();
+
+        if (!(sender instanceof Player))
+            return true;
+
+        Player player = (Player) sender;
+
+        if (!player.hasPermission("playertime.top") || args.length != 0 ||
+                !config.getString("leaderboard-type").equalsIgnoreCase("gui") &&
+                        !config.getString("leaderboard-type").equalsIgnoreCase("text"))
+            return true;
+
+        if (config.getString("leaderboard-type").equalsIgnoreCase("gui")) {
+            Inventory top = Bukkit.createInventory(null, 9, color(config.getString("gui.title")));
+            Map<String, Integer> map = playerTime.getDatabase().getTopTen();
+            ItemStack material = new ItemStack(Material.getMaterial(config.getString("gui.item.material")));
+            ItemMeta meta = material.getItemMeta();
+
+            int size = Math.min(map.size(), 9);
+
+            for (int i = 0; i < size; i++) {
+                List<String> lore = new ArrayList<>();
+                UUID uuid = UUID.fromString(map.keySet().toArray()[i].toString());
+                String name = Bukkit.getServer().getOfflinePlayer(uuid).getName();
+                String time = map.values().toArray()[i].toString();
+                meta.setDisplayName(color(config.getString("gui.item.name").replace("{player}", name)));
+                for (String text : config.getStringList("gui.item.lore")) {
+                    lore.add(color(text).replace("{slot}", String.valueOf(i + 1)).replace("{format}", timeFormat(Integer.valueOf(time))));
                 }
-                for (int i = 0; i < size; i++) {
-                    List<String> lore = new ArrayList<>();
-                    UUID uuid = UUID.fromString(map.keySet().toArray()[i].toString());
-                    String name = Bukkit.getServer().getOfflinePlayer(uuid).getName();
-                    String time = map.values().toArray()[i].toString();
-                    meta.setDisplayName(color(c.getString("gui.item.name").replace("{player}", name)));
-                    for (String text : c.getStringList("gui.item.lore")) {
-                        lore.add(color(text).replace("{slot}", String.valueOf(i + 1)).replace("{format}", timeFormat(Integer.valueOf(time))));
-                    }
-                    meta.setLore(lore);
-                    material.setItemMeta(meta);
-                    top.setItem(i, material);
-                }
-                player.openInventory(top);
-                uuids.add(player.getUniqueId());
+                meta.setLore(lore);
+                material.setItemMeta(meta);
+                top.setItem(i, material);
             }
-            else {
-                player.sendMessage(color(c.getString("text-top.title")));
-                Map<String, Integer> map = playerTime.getDatabase().getTopTen();
-                for (int i = 0; i < map.size(); i++) {
-                    UUID uuid = UUID.fromString(map.keySet().toArray()[i].toString());
-                    String name = Bukkit.getServer().getOfflinePlayer(uuid).getName();
-                    String time = map.values().toArray()[i].toString();
-                    player.sendMessage(color(c.getString("text-top.content").replace("{place}", String.valueOf(i + 1)).replace("{name}", name).replace("{time}", timeFormat(Integer.valueOf(time)))));
-                }
-                player.sendMessage(color(c.getString("text-top.footer")));
+            player.openInventory(top);
+            uuids.add(player.getUniqueId());
+        } else {
+            player.sendMessage(color(config.getString("text-top.title")));
+            Map<String, Integer> map = playerTime.getDatabase().getTopTen();
+            for (int i = 0; i < map.size(); i++) {
+                UUID uuid = UUID.fromString(map.keySet().toArray()[i].toString());
+                String name = Bukkit.getServer().getOfflinePlayer(uuid).getName();
+                String time = map.values().toArray()[i].toString();
+                player.sendMessage(color(config.getString("text-top.content").replace("{place}", String.valueOf(i + 1)).replace("{name}", name).replace("{time}", timeFormat(Integer.valueOf(time)))));
             }
+            player.sendMessage(color(config.getString("text-top.footer")));
         }
         return true;
     }
-
 }
