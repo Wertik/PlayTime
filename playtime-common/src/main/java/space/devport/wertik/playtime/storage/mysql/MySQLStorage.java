@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import space.devport.wertik.playtime.MySQLConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
@@ -13,7 +12,9 @@ import space.devport.wertik.playtime.struct.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class MySQLStorage implements IUserStorage {
@@ -43,12 +44,19 @@ public class MySQLStorage implements IUserStorage {
         User user = new User(uniqueID);
 
         long time = 0;
+
         ResultSet resultSet = connection.executeQuery(Query.GET_TIME.get(tableName), uniqueID.toString());
-        try {
-            resultSet.getLong("time");
-        } catch (SQLException e) {
-            AbstractConsoleOutput.getImplementation().err("Couldn't load time for " + uniqueID);
-        }
+
+        if (resultSet != null)
+            try {
+                if (resultSet.next()) {
+                    //AbstractConsoleOutput.getImplementation().debug(resultSet.findColumn("time") + "");
+                    time = resultSet.getLong("time");
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+
         user.setPlayedTime(time);
         return user;
     }

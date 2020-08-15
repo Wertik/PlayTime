@@ -53,7 +53,7 @@ public class User {
     }
 
     public long getPlayedTime() {
-        return sinceJoin() + playedTime;
+        return online ? sinceJoin() + playedTime : playedTime;
     }
 
     public long getPlayedTimeRaw() {
