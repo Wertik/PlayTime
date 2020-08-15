@@ -29,7 +29,7 @@ public class PlayerListener implements Listener {
             if (user == null)
                 user = plugin.getLocalUserManager().createUser(player.getUniqueId());
         } else
-            user = plugin.getLocalUserManager().getUser(player.getUniqueId());
+            user = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId());
 
         // Set player online here, configure join time.
         user.setOnline();
@@ -40,9 +40,12 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
 
         // Unload the user
-        User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
+        if (plugin.getLocalUserManager().isLoaded(player.getUniqueId())) {
+            User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
 
-        if (user != null) {
+            // Should never happen
+            if (user == null) return;
+
             user.setOffline();
             plugin.getLocalUserManager().unloadUser(player.getUniqueId());
         }

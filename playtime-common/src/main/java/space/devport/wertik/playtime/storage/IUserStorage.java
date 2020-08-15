@@ -2,6 +2,7 @@ package space.devport.wertik.playtime.storage;
 
 import space.devport.wertik.playtime.struct.User;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -15,8 +16,6 @@ public interface IUserStorage {
     Set<User> loadAll();
 
     void saveUser(User user);
-
-    void saveAll(Set<User> users);
 
     void deleteUser(User user);
 

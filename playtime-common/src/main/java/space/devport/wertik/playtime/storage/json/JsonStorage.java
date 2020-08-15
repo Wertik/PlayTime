@@ -50,9 +50,4 @@ public class JsonStorage implements IUserStorage {
     public Set<User> loadAll() {
         throw new NotImplementedException();
     }
-
-    @Override
-    public void saveAll(Set<User> users) {
-        throw new NotImplementedException();
-    }
 }

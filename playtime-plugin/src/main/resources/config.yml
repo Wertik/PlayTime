@@ -24,4 +24,4 @@ storage:
 
 # Time formats
 formats:
-  duration: "H 'h' m 'm' s 's'"
+  duration: "'&f'H'&7h&f' m'&7m&f' s'&7s&r'"

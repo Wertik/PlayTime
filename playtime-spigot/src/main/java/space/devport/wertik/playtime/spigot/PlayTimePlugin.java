@@ -7,10 +7,12 @@ import org.bukkit.entity.Player;
 import space.devport.utils.DevportPlugin;
 import space.devport.wertik.playtime.MySQLConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
+import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.ReloadSubCommand;
+import space.devport.wertik.playtime.spigot.console.SpigotConsoleOutput;
 import space.devport.wertik.playtime.spigot.listeners.PlayerListener;
 import space.devport.wertik.playtime.spigot.system.SpigotLocalUserManager;
 import space.devport.wertik.playtime.storage.IUserStorage;
@@ -28,6 +30,9 @@ public class PlayTimePlugin extends DevportPlugin {
     private static PlayTimePlugin instance;
 
     @Getter
+    private String durationFormat;
+
+    @Getter
     private LocalUserManager localUserManager;
 
     @Getter
@@ -37,7 +42,10 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onPluginEnable() {
         instance = this;
 
+        AbstractConsoleOutput.setImplementation(new SpigotConsoleOutput(consoleOutput));
         TaskChainFactoryHolder.setTaskChainFactory(BukkitTaskChainFactory.create(this));
+
+        loadOptions();
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
         //TODO maybe replace with a for loop, it's faster.
@@ -60,11 +68,20 @@ public class PlayTimePlugin extends DevportPlugin {
 
     @Override
     public void onPluginDisable() {
+        this.localUserManager.saveAll();
+    }
+
+    /**
+     * Load additional config options.
+     */
+    public void loadOptions() {
+        this.durationFormat = configuration.getString("formats.duration", "H 'h' m 'm' s 's'");
     }
 
     @Override
     public void onReload() {
         registerPlaceholders();
+        loadOptions();
     }
 
     private IUserStorage initiateStorage() {

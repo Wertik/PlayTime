@@ -12,11 +12,18 @@ enum Query {
             + "    UNIQUE (`uuid`)\n"
             + ") ENGINE=InnoDB DEFAULT CHARSET=utf8;"),
 
-    INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, time) VALUES(?, ?)"),
+    DROP_TABLE("DROP TABLE IF EXISTS `%table%`"),
+
+    DELETE_USER("DELETE FROM `%table%` WHERE uuid=?"),
 
     EXIST_CHECK("SELECT uuid from `%table%` WHERE uuid=?"),
 
-    UPDATE_USER("UPDATE '%table%' set time=? WHERE uuid=?"),
+    /*
+     * //TODO Insert and update are basically the same, mergining them into one and removing existence checks could improve performance.
+     */
+    INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, lastKnownName, time) VALUES(?, ?, ?)"),
+
+    UPDATE_USER("UPDATE '%table%' SET `time` = ?, `lastKnownName` = ? WHERE `uuid` = ?"),
 
     GET_TIME("SELECT `time` FROM `%table%` WHERE uuid=?"),
 

@@ -7,21 +7,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import space.devport.wertik.playtime.MySQLConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
+import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 public class MySQLStorage implements IUserStorage {
 
     @Getter
-    private MySQLConnection connection;
+    private final MySQLConnection connection;
 
     @Getter
     @Setter
@@ -36,37 +34,69 @@ public class MySQLStorage implements IUserStorage {
     public void initialize() {
         TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.CREATE_TABLE.get(tableName))).execute((exception, task) -> {
             if (exception != null) exception.printStackTrace();
+            AbstractConsoleOutput.getImplementation().debug("MySQL storage initiated.");
         });
     }
 
     @Override
     public User loadUser(UUID uniqueID) {
-        return null;
+        User user = new User(uniqueID);
+
+        long time = 0;
+        ResultSet resultSet = connection.executeQuery(Query.GET_TIME.get(tableName), uniqueID.toString());
+        try {
+            resultSet.getLong("time");
+        } catch (SQLException e) {
+            AbstractConsoleOutput.getImplementation().err("Couldn't load time for " + uniqueID);
+        }
+        user.setPlayedTime(time);
+        return user;
     }
 
     @Override
     public Set<User> loadAll() {
-        return null;
+        //TODO
+        return new HashSet<>();
     }
 
     @Override
     public void saveUser(User user) {
+        String lastKnownName = Bukkit.getOfflinePlayer(user.getUniqueID()).getName();
 
-    }
+        boolean exists = exists(user.getUniqueID());
 
-    @Override
-    public void saveAll(Set<User> users) {
-
+        if (exists)
+            TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.UPDATE_USER.get(tableName),
+                    user.getUniqueID().toString(),
+                    lastKnownName,
+                    user.getPlayedTime()))
+                    .execute((exception, task) -> {
+                        if (exception != null) exception.printStackTrace();
+                    });
+        else
+            TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.INSERT_USER.get(tableName),
+                    user.getUniqueID().toString(),
+                    lastKnownName,
+                    user.getPlayedTime()))
+                    .execute((exception, task) -> {
+                        if (exception != null) exception.printStackTrace();
+                    });
     }
 
     @Override
     public void deleteUser(User user) {
-
+        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.DELETE_USER.get(tableName), user.getUniqueID().toString()))
+                .execute((exception, task) -> {
+                    if (exception != null) exception.printStackTrace();
+                });
     }
 
     @Override
     public void purge() {
-
+        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.DROP_TABLE.get(tableName)))
+                .execute((exception, task) -> {
+                    if (exception != null) exception.printStackTrace();
+                });
     }
 
     @Override
@@ -74,14 +104,10 @@ public class MySQLStorage implements IUserStorage {
         throw new NotImplementedException();
     }
 
-    public void insertUser(UUID uuid, String time) {
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.INSERT_USER.get(tableName), uuid.toString(), offlinePlayer.getName(), time)).execute((exception, task) -> {
-            if (exception != null) exception.printStackTrace();
-        });
-    }
-
-    public boolean hasTime(UUID uuid) {
+    /**
+     * Check if the table has this entry.
+     */
+    public boolean exists(UUID uuid) {
         try {
             ResultSet rs = connection.executeQuery(Query.EXIST_CHECK.get(tableName), uuid.toString());
             if (rs.next()) return true;
@@ -89,35 +115,5 @@ public class MySQLStorage implements IUserStorage {
             ex.printStackTrace();
         }
         return false;
-    }
-
-    public Map<String, Integer> getTopTen() {
-        Map<String, Integer> topTen = new LinkedHashMap<>();
-        try {
-            ResultSet rs = connection.executeQuery(Query.GET_TOP_TEN.get(tableName));
-            if (rs == null) return topTen;
-            topTen.put(rs.getString("uuid"), Integer.valueOf(rs.getString("time")));
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return topTen;
-    }
-
-    public void setTime(UUID uuid, String time) {
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.UPDATE_USER.get(tableName), uuid.toString(), offlinePlayer.getName(), time)).execute((exception, task) -> {
-            if (exception != null) exception.printStackTrace();
-        });
-    }
-
-    public String getTime(UUID uuid) {
-        try {
-            ResultSet rs = connection.executeQuery(Query.GET_TIME.get(tableName), uuid.toString());
-            if (rs == null) return "";
-            return rs.getString("time");
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return "";
     }
 }

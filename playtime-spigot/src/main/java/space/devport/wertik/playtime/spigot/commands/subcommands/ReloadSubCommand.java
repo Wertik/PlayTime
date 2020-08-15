@@ -5,15 +5,20 @@ import org.jetbrains.annotations.NotNull;
 import space.devport.utils.commands.SubCommand;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
+import space.devport.utils.commands.struct.Preconditions;
+import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 
 public class ReloadSubCommand extends SubCommand {
 
     public ReloadSubCommand() {
         super("reload");
+        this.preconditions = new Preconditions()
+                .permissions("playtime.reload");
     }
 
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
+        PlayTimePlugin.getInstance().reload(sender);
         return CommandResult.SUCCESS;
     }
 

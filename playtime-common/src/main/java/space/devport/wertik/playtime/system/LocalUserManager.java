@@ -1,6 +1,8 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
@@ -21,6 +23,12 @@ public class LocalUserManager {
     public void loadAll(Set<UUID> players) {
         for (UUID uniqueID : players) {
             loadUser(uniqueID);
+        }
+    }
+
+    public void saveAll() {
+        for (User user : this.localUsers.values()) {
+            storage.saveUser(user);
         }
     }
 
@@ -62,13 +70,30 @@ public class LocalUserManager {
     public User createUser(UUID uniqueID) {
         User user = new User(uniqueID);
         this.localUsers.put(uniqueID, user);
-        AbstractConsoleOutput.getImplementation().debug("Created new User " + uniqueID);
+        AbstractConsoleOutput.getImplementation().debug("Created user " + uniqueID);
         return user;
     }
 
     /**
-     * Get User from cache.
+     * Attempt to get user from cache.
+     * If not there, attempt to load.
+     * If not saved at all, create a new one.
      */
+    @NotNull
+    public User getOrCreateUser(UUID uniqueID) {
+        User user = this.localUsers.getOrDefault(uniqueID, null);
+
+        if (user == null) user = loadUser(uniqueID);
+        if (user == null) user = createUser(uniqueID);
+
+        return user;
+    }
+
+    /**
+     * Attempt to get user from cache.
+     * If he's not loaded, attempt to do so.
+     */
+    @Nullable
     public User getUser(UUID uniqueID) {
         return this.localUsers.getOrDefault(uniqueID, loadUser(uniqueID));
     }
