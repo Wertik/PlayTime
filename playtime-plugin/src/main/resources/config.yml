@@ -5,6 +5,10 @@
 plugin-prefix: "&aPlayTime &8>> "
 debug-enabled: false
 
+# Try to import time from statistics when a user with no record is created?
+# There are no statistics on Bungee.
+import-statistics: true
+
 storage:
   # mysql/json
   type: json

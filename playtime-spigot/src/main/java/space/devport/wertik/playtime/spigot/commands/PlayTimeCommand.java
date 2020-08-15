@@ -6,8 +6,8 @@ import space.devport.utils.commands.struct.CommandResult;
 
 public class PlayTimeCommand extends MainCommand {
 
-    public PlayTimeCommand(String name) {
-        super(name);
+    public PlayTimeCommand() {
+        super("playtime");
     }
 
     @Override
@@ -17,11 +17,11 @@ public class PlayTimeCommand extends MainCommand {
 
     @Override
     public String getDefaultUsage() {
-        return null;
+        return "/%label%";
     }
 
     @Override
     public String getDefaultDescription() {
-        return null;
+        return "Displays this.";
     }
 }

@@ -5,7 +5,11 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.bungee.console.BungeeConsoleOutput;
+import space.devport.wertik.playtime.bungee.events.BungeePlayTimeDisableEvent;
+import space.devport.wertik.playtime.bungee.listeners.BungeePlayerListener;
+import space.devport.wertik.playtime.bungee.taskchain.BungeeTaskChainFactory;
 import space.devport.wertik.playtime.system.LocalUserManager;
 
 import java.io.File;
@@ -37,13 +41,17 @@ public class BungeePlayTimePlugin extends Plugin {
 
         this.consoleOutput = new BungeeConsoleOutput(this);
 
+        TaskChainFactoryHolder.setTaskChainFactory(BungeeTaskChainFactory.create(this));
+
         configurationProvider = ConfigurationProvider.getProvider(YamlConfiguration.class);
         loadConfig();
+
+        getProxy().getPluginManager().registerListener(this, new BungeePlayerListener(this));
     }
 
     @Override
     public void onDisable() {
-
+        getProxy().getPluginManager().callEvent(new BungeePlayTimeDisableEvent());
     }
 
     private void initiateStorage() {
