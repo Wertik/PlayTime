@@ -18,9 +18,6 @@ enum Query {
 
     EXIST_CHECK("SELECT uuid from `%table%` WHERE `uuid` = ?"),
 
-    /*
-     * //TODO Insert and update are basically the same, merging them into one and removing existence checks could improve performance.
-     */
     INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, lastKnownName, time) VALUES(?, ?, ?)"),
 
     //UPDATE_USER("UPDATE '%table%' SET `lastKnownName` = ?, `time` = ? WHERE `uuid` = ?;"),

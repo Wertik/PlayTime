@@ -1,17 +1,11 @@
 package space.devport.wertik.playtime.bungee.console;
 
-import lombok.Getter;
-import lombok.Setter;
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 
 public class BungeeConsoleOutput extends AbstractConsoleOutput {
 
     private final BungeePlayTimePlugin plugin;
-
-    @Getter
-    @Setter
-    private boolean debug = false;
 
     public BungeeConsoleOutput(BungeePlayTimePlugin plugin) {
         this.plugin = plugin;
@@ -35,6 +29,7 @@ public class BungeeConsoleOutput extends AbstractConsoleOutput {
 
     @Override
     public void debug(String msg) {
-        plugin.getLogger().info("DEBUG: " + msg);
+        if (isDebug())
+            plugin.getLogger().info("DEBUG: " + msg);
     }
 }

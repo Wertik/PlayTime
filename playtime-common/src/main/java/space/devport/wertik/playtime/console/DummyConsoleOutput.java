@@ -7,17 +7,22 @@ public class DummyConsoleOutput extends AbstractConsoleOutput {
 
     @Override
     public void err(String msg) {
+        System.out.print("ERROR: " + msg);
     }
 
     @Override
     public void warn(String msg) {
+        System.out.print("ERROR: " + msg);
     }
 
     @Override
     public void info(String msg) {
+        System.out.print("ERROR: " + msg);
     }
 
     @Override
     public void debug(String msg) {
+        if (isDebug())
+            System.out.print("ERROR: " + msg);
     }
 }

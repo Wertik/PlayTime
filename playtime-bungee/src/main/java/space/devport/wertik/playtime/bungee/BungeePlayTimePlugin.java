@@ -70,7 +70,7 @@ public class BungeePlayTimePlugin extends Plugin {
         }
 
         try {
-            configurationProvider.load(file);
+            this.configuration = configurationProvider.load(file);
         } catch (IOException e) {
             if (consoleOutput.isDebug())
                 e.printStackTrace();

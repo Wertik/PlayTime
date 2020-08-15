@@ -1,5 +1,8 @@
 package space.devport.wertik.playtime.console;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public abstract class AbstractConsoleOutput {
 
     private static AbstractConsoleOutput implementation;
@@ -13,6 +16,10 @@ public abstract class AbstractConsoleOutput {
             setImplementation(new DummyConsoleOutput());
         return implementation;
     }
+
+    @Getter
+    @Setter
+    private boolean debug = false;
 
     public abstract void err(String msg);
 
