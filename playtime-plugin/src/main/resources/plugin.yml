@@ -1,0 +1,5 @@
+name: ${project.name}
+version: ${project.version}
+main: space.devport.wertik.playtime.PlayTimePlugin
+authors: [Wertik1206]
+softdepend: [PlaceholderAPI]

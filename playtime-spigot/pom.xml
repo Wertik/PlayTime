@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>playtime-spigot</artifactId>
+
+    <parent>
+        <groupId>space.devport.wertik.playtime</groupId>
+        <artifactId>PlayTime</artifactId>
+        <version>2.0.0</version>
+    </parent>
+
+    <repositories>
+        <repository>
+            <id>placeholderapi</id>
+            <url>http://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>space.devport.utils</groupId>
+            <artifactId>DevportUtils</artifactId>
+            <version>LATEST</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.10.9</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>space.devport.wertik.playtime</groupId>
+            <artifactId>playtime-common</artifactId>
+            <version>2.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+</project>

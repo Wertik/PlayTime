@@ -1,0 +1,21 @@
+# Configuration for ${project.name}
+#
+# Version: ${project.version}
+
+plugin-prefix: "&aPlayTime &8>> "
+debug-enabled: false
+
+storage:
+  # mysql/json
+  type: json
+  mysql:
+    host: "localhost"
+    port: 3306
+    username: "root"
+    password: "password"
+    database: "playtime"
+    table: ""
+
+# Time formats
+formats:
+  duration: "H 'h' m 'm' s 's'"
