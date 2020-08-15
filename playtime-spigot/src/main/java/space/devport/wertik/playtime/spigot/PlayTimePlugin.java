@@ -1,10 +1,12 @@
 package space.devport.wertik.playtime.spigot;
 
+import co.aikar.taskchain.BukkitTaskChainFactory;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import space.devport.utils.DevportPlugin;
 import space.devport.wertik.playtime.MySQLConnection;
+import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckSubCommand;
@@ -34,6 +36,8 @@ public class PlayTimePlugin extends DevportPlugin {
     @Override
     public void onPluginEnable() {
         instance = this;
+
+        TaskChainFactoryHolder.setTaskChainFactory(BukkitTaskChainFactory.create(this));
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
         //TODO maybe replace with a for loop, it's faster.
@@ -78,7 +82,7 @@ public class PlayTimePlugin extends DevportPlugin {
                         getConfig().getString("storage.mysql.username"),
                         getConfig().getString("storage.mysql.password"),
                         getConfig().getString("storage.mysql.database"),
-                        getConfig().getInt("storage.mysql.pool-size"));
+                        getConfig().getInt("storage.mysql.pool-size", 10));
                 connection.connect();
 
                 //TODO change table name

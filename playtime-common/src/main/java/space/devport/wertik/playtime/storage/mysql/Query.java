@@ -11,11 +11,16 @@ enum Query {
             + "    PRIMARY KEY (`uuid`), \n"
             + "    UNIQUE (`uuid`)\n"
             + ") ENGINE=InnoDB DEFAULT CHARSET=utf8;"),
+
     INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, time) VALUES(?, ?)"),
+
     EXIST_CHECK("SELECT uuid from `%table%` WHERE uuid=?"),
-    UPDATE_USER("UPDATE playertime%table% set time=? WHERE uuid=?"),
+
+    UPDATE_USER("UPDATE '%table%' set time=? WHERE uuid=?"),
+
     GET_TIME("SELECT `time` FROM `%table%` WHERE uuid=?"),
-    GET_TOP_TEN("SELECT * FROM `playertime` ORDER BY `time` DESC LIMIT 10");
+
+    GET_TOP_TEN("SELECT * FROM `%table%` ORDER BY `time` DESC LIMIT 10");
 
     @Getter
     private final String statement;

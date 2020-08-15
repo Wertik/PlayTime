@@ -1,4 +1,4 @@
 name: ${project.name}
 version: ${project.version}
-main: space.devport.wertik.playtime.BungeePlayTimePlugin
+main: space.devport.wertik.playtime.bungee.BungeePlayTimePlugin
 authors: [Wertik1206]

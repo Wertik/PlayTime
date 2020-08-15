@@ -17,6 +17,10 @@
             <id>placeholderapi</id>
             <url>http://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
+        <repository>
+            <id>devport</id>
+            <url>http://play.pvpcraft.cz:8081/repository/devport/</url>
+        </repository>
     </repositories>
 
     <dependencies>

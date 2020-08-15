@@ -1,12 +1,12 @@
 package space.devport.wertik.playtime;
 
-import com.sun.rowset.CachedRowSetImpl;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import lombok.Setter;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 
 import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetProvider;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -100,7 +100,7 @@ public class MySQLConnection {
                 }
             }
 
-            CachedRowSet resultCached = new CachedRowSetImpl();
+            CachedRowSet resultCached = RowSetProvider.newFactory().createCachedRowSet();
             ResultSet resultSet = statement.executeQuery();
 
             AbstractConsoleOutput.getImplementation().debug("Executed query " + statement.toString());
