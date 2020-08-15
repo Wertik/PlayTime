@@ -5,5 +5,5 @@ import net.md_5.bungee.api.plugin.Event;
 
 @NoArgsConstructor
 public class BungeePlayTimeDisableEvent extends Event {
-    // We just need to see it.
+    // We just need to see the event happen.
 }
