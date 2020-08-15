@@ -4,6 +4,8 @@ import com.sun.rowset.CachedRowSetImpl;
 import com.zaxxer.hikari.HikariDataSource;
 import me.glaremasters.playertime.PlayerTime;
 import me.glaremasters.playertime.database.DatabaseProvider;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 
 import javax.sql.rowset.CachedRowSet;
@@ -13,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by GlareMasters
@@ -51,24 +54,21 @@ public class MySQLDatabaseProvider implements DatabaseProvider {
         PlayerTime.newChain().async(() -> execute(Query.CREATE_TABLE)).execute((exception, task) -> {
             if (exception != null) exception.printStackTrace();
         });
-
-
     }
 
     @Override
-    public void insertUser(String uuid, String time) {
-        PlayerTime.newChain().async(() -> execute(Query.INSERT_USER, uuid, time)).execute((exception, task) -> {
+    public void insertUser(UUID uuid, String time) {
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+        PlayerTime.newChain().async(() -> execute(Query.INSERT_USER, uuid.toString(), offlinePlayer.getName(), time)).execute((exception, task) -> {
             if (exception != null) exception.printStackTrace();
         });
     }
 
     @Override
-    public boolean hasTime(String uuid) {
+    public boolean hasTime(UUID uuid) {
         try {
-            ResultSet rs = executeQuery(Query.EXIST_CHECK, uuid);
-            while (rs.next()) {
-                return true;
-            }
+            ResultSet rs = executeQuery(Query.EXIST_CHECK, uuid.toString());
+            if (rs.next()) return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -89,16 +89,17 @@ public class MySQLDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public void setTime(String time, String uuid) {
-        PlayerTime.newChain().async(() -> execute(Query.UPDATE_USER, uuid, time)).execute((exception, task) -> {
+    public void setTime(UUID uuid, String time) {
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+        PlayerTime.newChain().async(() -> execute(Query.UPDATE_USER, uuid.toString(), offlinePlayer.getName(), time)).execute((exception, task) -> {
             if (exception != null) exception.printStackTrace();
         });
     }
 
     @Override
-    public String getTime(String uuid) {
+    public String getTime(UUID uuid) {
         try {
-            ResultSet rs = executeQuery(Query.GET_TIME, uuid);
+            ResultSet rs = executeQuery(Query.GET_TIME, uuid.toString());
             if (rs == null) return "";
             return rs.getString("time");
         } catch (SQLException ex) {

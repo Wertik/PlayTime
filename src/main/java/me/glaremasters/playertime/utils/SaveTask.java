@@ -12,13 +12,13 @@ import org.bukkit.entity.Player;
 public class SaveTask {
 
     public static void startTask() {
-        Bukkit.getScheduler().scheduleAsyncRepeatingTask(PlayerTime.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(PlayerTime.getInstance(), () -> {
             if (Bukkit.getOnlinePlayers().size() > 0) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (PlayerTime.getInstance().getDatabase().hasTime(player.getUniqueId().toString())) {
-                        PlayerTime.getInstance().getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
+                    if (PlayerTime.getInstance().getDatabase().hasTime(player.getUniqueId())) {
+                        PlayerTime.getInstance().getDatabase().setTime(player.getUniqueId(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
                     } else {
-                        PlayerTime.getInstance().getDatabase().insertUser(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
+                        PlayerTime.getInstance().getDatabase().insertUser(player.getUniqueId(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
                     }
                 }
             }

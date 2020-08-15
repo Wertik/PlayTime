@@ -2,6 +2,8 @@ package me.glaremasters.playertime.database.yml;
 
 import me.glaremasters.playertime.PlayerTime;
 import me.glaremasters.playertime.database.DatabaseProvider;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 
 import java.util.*;
 
@@ -20,25 +22,25 @@ public class YamlDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public void insertUser(String uuid, String time) {
-        playerTime.config.set(uuid, time);
+    public void insertUser(UUID uuid, String time) {
+        playerTime.config.set(uuid.toString(), time);
         playerTime.saveTime();
     }
 
     @Override
-    public boolean hasTime(String uuid) {
-        return PlayerTime.getInstance().config.getString(uuid) != null;
+    public boolean hasTime(UUID uuid) {
+        return PlayerTime.getInstance().config.getString(uuid.toString()) != null;
     }
 
     @Override
-    public void setTime(String time, String uuid) {
-        playerTime.config.set(time, uuid);
+    public void setTime(UUID uuid, String time) {
+        playerTime.config.set(time, uuid.toString());
         playerTime.saveTime();
     }
 
     @Override
-    public String getTime(String uuid) {
-        return PlayerTime.getInstance().config.getString(uuid);
+    public String getTime(UUID uuid) {
+        return PlayerTime.getInstance().config.getString(uuid.toString());
     }
 
     @Override

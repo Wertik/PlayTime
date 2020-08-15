@@ -9,6 +9,7 @@ class Query {
 
     static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS `playertime` (\n"
             + "    `uuid` VARCHAR(40)  NOT NULL ,\n"
+            + "    `lastKnownName` VARCHAR(16) ,\n"
             + "    `time` varchar(32)  NOT NULL ,\n"
             + "    PRIMARY KEY (`uuid`), \n"
             + "    UNIQUE (`uuid`)\n"

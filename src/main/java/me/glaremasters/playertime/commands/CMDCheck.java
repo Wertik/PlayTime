@@ -5,7 +5,6 @@ import me.glaremasters.playertime.utils.TimeUtil;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Statistic;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -53,7 +52,7 @@ public class CMDCheck implements CommandExecutor {
                     return true;
                 }
 
-                if (!PlayerTime.getInstance().getDatabase().hasTime(player.getUniqueId().toString())) {
+                if (!PlayerTime.getInstance().getDatabase().hasTime(player.getUniqueId())) {
                     player.sendMessage(color(config.getString("messages.no-playtime-data")));
                     return true;
                 }
@@ -91,7 +90,7 @@ public class CMDCheck implements CommandExecutor {
     }
 
     public static void messageConvertOffline(CommandSender sender, OfflinePlayer player) {
-        String endTime = DurationFormatUtils.formatDuration(Integer.valueOf(PlayerTime.getInstance().getDatabase().getTime(player.getUniqueId().toString())), "d:H:m:s");
+        String endTime = DurationFormatUtils.formatDuration(Integer.parseInt(PlayerTime.getInstance().getDatabase().getTime(player.getUniqueId())), "d:H:m:s");
         String[] parts = endTime.split(":");
         String days = parts[0];
         String hours = parts[1];

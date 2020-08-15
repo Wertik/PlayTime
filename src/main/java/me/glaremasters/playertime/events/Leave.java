@@ -18,20 +18,20 @@ public class Leave implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        if (playerTime.getDatabase().hasTime(player.getUniqueId().toString())) {
-            playerTime.getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
+        if (playerTime.getDatabase().hasTime(player.getUniqueId())) {
+            playerTime.getDatabase().setTime(player.getUniqueId(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
         } else {
-            playerTime.getDatabase().insertUser(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
+            playerTime.getDatabase().insertUser(player.getUniqueId(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
         }
     }
 
     @EventHandler
     public void onKick(PlayerKickEvent event) {
         Player player = event.getPlayer();
-        if (playerTime.getDatabase().hasTime(player.getUniqueId().toString())) {
-            playerTime.getDatabase().setTime(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
+        if (playerTime.getDatabase().hasTime(player.getUniqueId())) {
+            playerTime.getDatabase().setTime(player.getUniqueId(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
         } else {
-            playerTime.getDatabase().insertUser(player.getUniqueId().toString(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
+            playerTime.getDatabase().insertUser(player.getUniqueId(), String.valueOf(TimeUtil.getTimeFromStatistics(player)));
         }
     }
 }

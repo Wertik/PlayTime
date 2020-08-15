@@ -1,23 +1,19 @@
 package me.glaremasters.playertime.database;
 
 import java.util.Map;
+import java.util.UUID;
 
-/**
- * Created by GlareMasters
- * Date: 7/19/2018
- * Time: 10:17 PM
- */
 public interface DatabaseProvider {
 
     void initialize();
 
-    void insertUser(String uuid, String time);
+    void insertUser(UUID uuid, String time);
 
-    boolean hasTime(String uuid);
+    boolean hasTime(UUID uuid);
 
-    void setTime(String time, String uuid);
+    void setTime(UUID uuid, String time);
 
-    String getTime(String uuid);
+    String getTime(UUID uuid);
 
     Map<String, Integer> getTopTen();
 }
