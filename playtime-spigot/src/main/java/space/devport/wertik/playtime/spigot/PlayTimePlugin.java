@@ -15,6 +15,7 @@ import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.ReloadSubCommand;
+import space.devport.wertik.playtime.spigot.commands.subcommands.ResetSubCommand;
 import space.devport.wertik.playtime.spigot.console.SpigotConsoleOutput;
 import space.devport.wertik.playtime.spigot.listeners.PlayerListener;
 import space.devport.wertik.playtime.spigot.system.SpigotLocalUserManager;
@@ -65,7 +66,8 @@ public class PlayTimePlugin extends DevportPlugin {
         addMainCommand(new PlayTimeCommand())
                 .addSubCommand(new ReloadSubCommand())
                 .addSubCommand(new CheckGlobalSubCommand())
-                .addSubCommand(new CheckSubCommand());
+                .addSubCommand(new CheckSubCommand())
+                .addSubCommand(new ResetSubCommand());
     }
 
     @Override
