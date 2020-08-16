@@ -2,6 +2,9 @@ package space.devport.wertik.playtime.spigot;
 
 import co.aikar.taskchain.BukkitTaskChainFactory;
 import lombok.Getter;
+import me.clip.placeholderapi.PlaceholderAPI;
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import space.devport.utils.DevportPlugin;
@@ -50,7 +53,6 @@ public class PlayTimePlugin extends DevportPlugin {
         loadOptions();
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
-        //TODO maybe replace with a for loop, it's faster.
         this.localUserManager.loadAll(Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).collect(Collectors.toSet()));
 
         //TODO
@@ -77,7 +79,7 @@ public class PlayTimePlugin extends DevportPlugin {
      * Load additional config options.
      */
     public void loadOptions() {
-        this.durationFormat = configuration.getString("formats.duration", "H 'h' m 'm' s 's'");
+        this.durationFormat = configuration.getString("formats.duration", "H'h' m'm' s's'");
     }
 
     @Override
@@ -104,7 +106,8 @@ public class PlayTimePlugin extends DevportPlugin {
                         getConfig().getInt("storage.mysql.pool-size", 10));
                 connection.connect();
 
-                //TODO change table name
+                //TODO change table name to server names when appropriate
+                // Add server names with mysql information into config.yml
                 userStorage = new MySQLStorage(connection, "play-time");
                 break;
         }
@@ -115,10 +118,32 @@ public class PlayTimePlugin extends DevportPlugin {
 
     private void registerPlaceholders() {
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            //TODO unregister old expansion
+
+            // On version 2.10.7+ attempt to unregister expansion.
+            if (PlaceholderAPI.isRegistered("playtime") && compileVersionNumber(getServer().getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion()) >= 2107) {
+                PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
+
+                if (expansion != null) {
+                    // Compare versions
+                    if (compileVersionNumber(expansion.getVersion()) < compileVersionNumber(getDescription().getVersion())) {
+                        expansion.unregister();
+                        consoleOutput.info("Unregistered old playtime expansion (" + expansion.getVersion() + ")");
+                    }
+                }
+            }
+
             new PlayTimeExpansion().register();
             consoleOutput.info("Found PlaceholderAPI! &aRegistered expansion.");
         }
+    }
+
+    private int compileVersionNumber(String versionString) {
+        int versionNumber = 0;
+        try {
+            versionNumber = Integer.parseInt(versionString.replace("\\.", ""));
+        } catch (NumberFormatException ignored) {
+        }
+        return versionNumber;
     }
 
     @Override

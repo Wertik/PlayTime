@@ -1,12 +1,19 @@
 package space.devport.wertik.playtime.spigot;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import space.devport.wertik.playtime.struct.User;
 
 public class PlayTimeExpansion extends PlaceholderExpansion {
 
     private final PlayTimePlugin plugin = PlayTimePlugin.getInstance();
+
+    /*
+     * %playtime% -- time spent on server in millis
+     * %playtime_formatted% -- time spent on server formatted
+     * */
 
     @Override
     public @NotNull String getIdentifier() {
@@ -28,10 +35,19 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
         String[] args = params.split("_");
 
-        if (args.length < 1)
-            return "not_enough_args";
-
-        //TODO
-        return "not_done_yet";
+        if (args.length == 0) {
+            User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
+            if (user == null) return "0";
+            return String.valueOf(user.getPlayedTime());
+        } else {
+            //TODO
+            switch (args[0].toLowerCase()) {
+                case "formatted":
+                    User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
+                    if (user == null) return "0";
+                    return DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat());
+            }
+        }
+        return "invalid_params";
     }
 }
