@@ -8,6 +8,7 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import space.devport.utils.DevportPlugin;
+import space.devport.utils.UsageFlag;
 import space.devport.wertik.playtime.MySQLConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
@@ -108,7 +109,7 @@ public class PlayTimePlugin extends DevportPlugin {
 
                 //TODO change table name to server names when appropriate
                 // Add server names with mysql information into config.yml
-                userStorage = new MySQLStorage(connection, "play-time");
+                userStorage = new MySQLStorage(connection, this.configuration.getString("storage.mysql.table", "playtime"));
                 break;
         }
 
@@ -147,17 +148,7 @@ public class PlayTimePlugin extends DevportPlugin {
     }
 
     @Override
-    public boolean useLanguage() {
-        return true;
-    }
-
-    @Override
-    public boolean useHolograms() {
-        return false;
-    }
-
-    @Override
-    public boolean useMenus() {
-        return false;
+    public UsageFlag[] usageFlags() {
+        return new UsageFlag[]{UsageFlag.LANGUAGE, UsageFlag.CONFIGURATION, UsageFlag.COMMANDS};
     }
 }
