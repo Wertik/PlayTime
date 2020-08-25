@@ -8,7 +8,6 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class LocalUserManager {
 
@@ -70,7 +69,9 @@ public class LocalUserManager {
      */
     public User createUser(UUID uniqueID) {
         User user = new User(uniqueID);
-        user.setOnline(checkOnline(uniqueID));
+
+        if (checkOnline(uniqueID)) user.setOnline();
+
         this.localUsers.put(uniqueID, user);
         AbstractConsoleOutput.getImplementation().debug("Created user " + uniqueID);
         return user;
@@ -93,7 +94,6 @@ public class LocalUserManager {
      */
     @Nullable
     public User getUser(UUID uniqueID) {
-        AbstractConsoleOutput.getImplementation().debug("Users: " + this.localUsers.values().stream().map(u -> u.getUniqueID().toString()).collect(Collectors.joining(", ")));
         if (!this.localUsers.containsKey(uniqueID))
             return loadUser(uniqueID);
         return this.localUsers.getOrDefault(uniqueID, null);
@@ -106,7 +106,8 @@ public class LocalUserManager {
         User user = storage.loadUser(uniqueID);
 
         if (user != null) {
-            user.setOnline(checkOnline(uniqueID));
+            if (checkOnline(uniqueID)) user.setOnline();
+
             this.localUsers.put(uniqueID, user);
             AbstractConsoleOutput.getImplementation().debug("Loaded user " + uniqueID);
         }
