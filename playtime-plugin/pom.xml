@@ -9,7 +9,7 @@
     <parent>
         <groupId>space.devport.wertik.playtime</groupId>
         <artifactId>PlayTime</artifactId>
-        <version>2.1.1</version>
+        <version>2.1.2</version>
     </parent>
 
     <name>PlayTime</name>
@@ -41,11 +41,18 @@
                 <version>3.2.1</version>
                 <executions>
                     <execution>
+                        <id>Basic shade</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <!--
+                    </execution>
+                    <execution>
+                        <id>Utils relocation</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
                         <configuration>
                             <minimizeJar>true</minimizeJar>
                             <relocations>
@@ -54,7 +61,7 @@
                                     <shadedPattern>${project.groupId}.utils</shadedPattern>
                                 </relocation>
                             </relocations>
-                        </configuration>-->
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

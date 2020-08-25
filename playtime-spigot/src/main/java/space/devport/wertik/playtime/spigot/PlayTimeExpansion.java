@@ -4,6 +4,7 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import space.devport.utils.text.StringUtil;
 import space.devport.wertik.playtime.struct.User;
 
 public class PlayTimeExpansion extends PlaceholderExpansion {
@@ -45,7 +46,7 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
                 case "formatted":
                     User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
                     if (user == null) return "0";
-                    return DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat());
+                    return StringUtil.color(DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat()));
             }
         }
         return "invalid_params";
