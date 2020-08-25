@@ -35,13 +35,13 @@ public class CheckSubCommand extends SubCommand {
             target = (Player) sender;
         }
 
-        User user = PlayTimePlugin.getInstance().getLocalUserManager().getUser(target.getUniqueId());
-        if (user == null) {
+        User user = PlayTimePlugin.getInstance().getLocalUserManager().getOrCreateUser(target.getUniqueId());
+        /*if (user == null) {
             language.getPrefixed("Commands.No-Record")
                     .replace("%player%", target.getName())
                     .send(sender);
             return CommandResult.FAILURE;
-        }
+        }*/
 
         language.getPrefixed("Commands.Check")
                 .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), PlayTimePlugin.getInstance().getDurationFormat()))

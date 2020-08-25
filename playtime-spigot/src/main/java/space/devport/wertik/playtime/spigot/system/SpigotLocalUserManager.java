@@ -1,5 +1,6 @@
 package space.devport.wertik.playtime.spigot.system;
 
+import org.bukkit.Bukkit;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.utils.StatisticUtil;
 import space.devport.wertik.playtime.storage.IUserStorage;
@@ -28,5 +29,10 @@ public class SpigotLocalUserManager extends LocalUserManager {
         }
 
         return user;
+    }
+
+    @Override
+    public boolean checkOnline(UUID uniqueID) {
+        return Bukkit.getOfflinePlayer(uniqueID).isOnline();
     }
 }
