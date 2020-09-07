@@ -6,19 +6,16 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import space.devport.utils.commands.SubCommand;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
-import space.devport.utils.commands.struct.Preconditions;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
+import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.User;
 
-public class CheckSubCommand extends SubCommand {
+public class CheckSubCommand extends PlayTimeSubCommand {
 
-    public CheckSubCommand() {
-        super("check");
-        this.preconditions = new Preconditions()
-                .permissions("playtime.check");
+    public CheckSubCommand(PlayTimePlugin plugin) {
+        super("check", plugin);
     }
 
     @Override
@@ -35,16 +32,16 @@ public class CheckSubCommand extends SubCommand {
             target = (Player) sender;
         }
 
-        User user = PlayTimePlugin.getInstance().getLocalUserManager().getOrCreateUser(target.getUniqueId());
-        /*if (user == null) {
+        User user = getPlugin().getLocalUserManager().getUser(target.getUniqueId());
+        if (user == null) {
             language.getPrefixed("Commands.No-Record")
                     .replace("%player%", target.getName())
                     .send(sender);
             return CommandResult.FAILURE;
-        }*/
+        }
 
         language.getPrefixed("Commands.Check")
-                .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), PlayTimePlugin.getInstance().getDurationFormat()))
+                .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat()))
                 .send(sender);
         return CommandResult.SUCCESS;
     }

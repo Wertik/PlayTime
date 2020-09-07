@@ -2,11 +2,11 @@ package space.devport.wertik.playtime.spigot;
 
 import co.aikar.taskchain.BukkitTaskChainFactory;
 import lombok.Getter;
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
@@ -33,9 +33,6 @@ import java.util.stream.Collectors;
 public class PlayTimePlugin extends DevportPlugin {
 
     @Getter
-    private static PlayTimePlugin instance;
-
-    @Getter
     private String durationFormat;
 
     @Getter
@@ -46,15 +43,15 @@ public class PlayTimePlugin extends DevportPlugin {
 
     @Override
     public void onPluginEnable() {
-        instance = this;
-
         AbstractConsoleOutput.setImplementation(new SpigotConsoleOutput(consoleOutput));
         TaskChainFactoryHolder.setTaskChainFactory(BukkitTaskChainFactory.create(this));
 
         loadOptions();
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
-        this.localUserManager.loadAll(Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).collect(Collectors.toSet()));
+        this.localUserManager.loadAll(Bukkit.getOnlinePlayers().stream()
+                .map(Player::getUniqueId)
+                .collect(Collectors.toSet()));
 
         //TODO
         //this.globalUserManager = new GlobalUserManager();
@@ -66,14 +63,15 @@ public class PlayTimePlugin extends DevportPlugin {
         registerListener(new PlayerListener(this));
 
         addMainCommand(new PlayTimeCommand())
-                .addSubCommand(new ReloadSubCommand())
-                .addSubCommand(new CheckGlobalSubCommand())
-                .addSubCommand(new CheckSubCommand())
-                .addSubCommand(new ResetSubCommand());
+                .addSubCommand(new ReloadSubCommand(this))
+                .addSubCommand(new CheckGlobalSubCommand(this))
+                .addSubCommand(new CheckSubCommand(this))
+                .addSubCommand(new ResetSubCommand(this));
     }
 
     @Override
     public void onPluginDisable() {
+        HandlerList.unregisterAll(this);
         this.localUserManager.saveAll();
     }
 
@@ -110,7 +108,7 @@ public class PlayTimePlugin extends DevportPlugin {
 
                 //TODO change table name to server names when appropriate
                 // Add server names with mysql information into config.yml
-                userStorage = new MySQLStorage(connection, this.configuration.getString("storage.mysql.table", "playtime"));
+                userStorage = new MySQLStorage(connection, "play-time");
                 break;
         }
 
@@ -119,39 +117,29 @@ public class PlayTimePlugin extends DevportPlugin {
     }
 
     private void registerPlaceholders() {
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+        if (pluginManager.getPlugin("PlaceholderAPI") != null) {
 
-            // On version 2.10.9+ attempt to unregister expansion.
-            if (PlaceholderAPI.isRegistered("playtime") &&
-                    VersionUtil.compareVersions("2.10.9", PlaceholderAPIPlugin.getInstance().getDescription().getVersion()) < 1) {
-
+            // On version 2.10.9+ unregister expansion.
+            if (VersionUtil.compareVersions("2.10.9", pluginManager.getPlugin("PlaceholderAPI").getDescription().getVersion()) < 1) {
                 PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
 
                 if (expansion != null) {
-                    // Compare versions
-                    if (compileVersionNumber(expansion.getVersion()) < compileVersionNumber(getDescription().getVersion())) {
-                        expansion.unregister();
-                        consoleOutput.info("Unregistered old playtime expansion (" + expansion.getVersion() + ")");
-                    }
+                    expansion.unregister();
+                    consoleOutput.info("Unregistered old playtime expansion (" + expansion.getVersion() + ")");
                 }
             }
 
-            new PlayTimeExpansion().register();
+            new PlayTimeExpansion(this).register();
             consoleOutput.info("Found PlaceholderAPI! &aRegistered expansion.");
         }
     }
 
-    private int compileVersionNumber(String versionString) {
-        int versionNumber = 0;
-        try {
-            versionNumber = Integer.parseInt(versionString.replace("\\.", ""));
-        } catch (NumberFormatException ignored) {
-        }
-        return versionNumber;
-    }
-
     @Override
     public UsageFlag[] usageFlags() {
-        return new UsageFlag[]{UsageFlag.LANGUAGE, UsageFlag.CONFIGURATION, UsageFlag.COMMANDS};
+        return new UsageFlag[]{UsageFlag.CONFIGURATION, UsageFlag.COMMANDS, UsageFlag.LANGUAGE};
+    }
+
+    public static PlayTimePlugin getInstance() {
+        return getPlugin(PlayTimePlugin.class);
     }
 }

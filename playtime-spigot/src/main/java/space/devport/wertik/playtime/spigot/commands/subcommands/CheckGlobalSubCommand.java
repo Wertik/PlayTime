@@ -2,17 +2,15 @@ package space.devport.wertik.playtime.spigot.commands.subcommands;
 
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import space.devport.utils.commands.SubCommand;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
-import space.devport.utils.commands.struct.Preconditions;
+import space.devport.wertik.playtime.spigot.PlayTimePlugin;
+import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 
-public class CheckGlobalSubCommand extends SubCommand {
+public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
-    public CheckGlobalSubCommand() {
-        super("checkglobal");
-        this.preconditions = new Preconditions()
-                .permissions("playtime.checkglobal");
+    public CheckGlobalSubCommand(PlayTimePlugin plugin) {
+        super("checkglobal", plugin);
     }
 
     @Override

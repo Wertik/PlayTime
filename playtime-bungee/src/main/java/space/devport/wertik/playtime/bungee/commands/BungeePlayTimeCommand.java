@@ -13,9 +13,9 @@ public class BungeePlayTimeCommand extends Command {
 
     private final BungeePlayTimePlugin plugin;
 
-    public BungeePlayTimeCommand() {
+    public BungeePlayTimeCommand(BungeePlayTimePlugin plugin) {
         super("playtime");
-        this.plugin = BungeePlayTimePlugin.getInstance();
+        this.plugin = plugin;
     }
 
     /*

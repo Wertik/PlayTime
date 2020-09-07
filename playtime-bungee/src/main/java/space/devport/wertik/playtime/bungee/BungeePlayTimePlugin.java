@@ -29,11 +29,12 @@ import java.util.stream.Collectors;
 
 public class BungeePlayTimePlugin extends Plugin {
 
+    // Bungee's Plugin has no equivalent of JavaPlugin#getPlugin()
     @Getter
     private static BungeePlayTimePlugin instance;
 
     /**
-     * Bungee only caches local user data as there's no reason to keep them here.
+     * Bungee only caches local user data as there's no output for global scope.
      */
     @Getter
     private LocalUserManager localUserManager;
@@ -67,7 +68,7 @@ public class BungeePlayTimePlugin extends Plugin {
 
         getProxy().getPluginManager().registerListener(this, new BungeePlayerListener(this));
 
-        getProxy().getPluginManager().registerCommand(this, new BungeePlayTimeCommand());
+        getProxy().getPluginManager().registerCommand(this, new BungeePlayTimeCommand(this));
     }
 
     @Override

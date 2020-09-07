@@ -1,5 +1,6 @@
 package space.devport.wertik.playtime.spigot;
 
+import lombok.RequiredArgsConstructor;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.entity.Player;
@@ -9,9 +10,10 @@ import space.devport.wertik.playtime.TimeElement;
 import space.devport.wertik.playtime.TimeUtil;
 import space.devport.wertik.playtime.struct.User;
 
+@RequiredArgsConstructor
 public class PlayTimeExpansion extends PlaceholderExpansion {
 
-    private final PlayTimePlugin plugin = PlayTimePlugin.getInstance();
+    private final PlayTimePlugin plugin;
 
     /*
      * %playtime% -- time spent on server in millis

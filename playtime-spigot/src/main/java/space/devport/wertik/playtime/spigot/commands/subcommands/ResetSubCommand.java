@@ -5,19 +5,16 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import space.devport.utils.commands.SubCommand;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
-import space.devport.utils.commands.struct.Preconditions;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
+import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.User;
 
-public class ResetSubCommand extends SubCommand {
+public class ResetSubCommand extends PlayTimeSubCommand {
 
-    public ResetSubCommand() {
-        super("reset");
-        this.preconditions = new Preconditions()
-                .permissions("playtime.reset");
+    public ResetSubCommand(PlayTimePlugin plugin) {
+        super("reset", plugin);
     }
 
     @Override
@@ -38,7 +35,7 @@ public class ResetSubCommand extends SubCommand {
             target = (Player) sender;
         }
 
-        User user = PlayTimePlugin.getInstance().getLocalUserManager().getUser(target.getUniqueId());
+        User user = getPlugin().getLocalUserManager().getUser(target.getUniqueId());
         if (user == null) {
             language.getPrefixed("Commands.No-Record")
                     .replace("%player%", target.getName())
@@ -46,9 +43,9 @@ public class ResetSubCommand extends SubCommand {
             return CommandResult.FAILURE;
         }
 
-        PlayTimePlugin.getInstance().getLocalUserManager().deleteUser(user.getUniqueID());
+        getPlugin().getLocalUserManager().deleteUser(user.getUniqueID());
 
-        if (PlayTimePlugin.getInstance().getConfig().getBoolean("import-statistics", false))
+        if (getPlugin().getConfig().getBoolean("import-statistics", false))
             language.sendPrefixed(sender, "Commands.Reset.Import-Warning");
 
         language.getPrefixed(others ? "Commands.Reset.Done-Others" : "Commands.Reset.Done")

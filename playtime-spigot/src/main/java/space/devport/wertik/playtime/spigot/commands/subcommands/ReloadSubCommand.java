@@ -2,23 +2,20 @@ package space.devport.wertik.playtime.spigot.commands.subcommands;
 
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import space.devport.utils.commands.SubCommand;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
-import space.devport.utils.commands.struct.Preconditions;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
+import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 
-public class ReloadSubCommand extends SubCommand {
+public class ReloadSubCommand extends PlayTimeSubCommand {
 
-    public ReloadSubCommand() {
-        super("reload");
-        this.preconditions = new Preconditions()
-                .permissions("playtime.reload");
+    public ReloadSubCommand(PlayTimePlugin plugin) {
+        super("reload", plugin);
     }
 
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
-        PlayTimePlugin.getInstance().reload(sender);
+        getPlugin().reload(sender);
         return CommandResult.SUCCESS;
     }
 
