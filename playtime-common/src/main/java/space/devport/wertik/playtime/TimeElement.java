@@ -4,6 +4,7 @@ import lombok.Getter;
 
 public enum TimeElement {
 
+    MONTH(2419200),
     WEEK(604800),
     DAY(86400),
     HOUR(3600),

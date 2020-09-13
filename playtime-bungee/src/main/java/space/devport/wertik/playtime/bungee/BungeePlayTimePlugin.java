@@ -9,13 +9,19 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import space.devport.wertik.playtime.*;
+import org.jetbrains.annotations.NotNull;
+import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.bungee.commands.BungeePlayTimeCommand;
-import space.devport.wertik.playtime.bungee.console.BungeeConsoleOutput;
+import space.devport.wertik.playtime.bungee.console.BungeeLogger;
 import space.devport.wertik.playtime.bungee.events.BungeePlayTimeDisableEvent;
 import space.devport.wertik.playtime.bungee.listeners.BungeePlayerListener;
+import space.devport.wertik.playtime.bungee.system.BungeeLocalUserManager;
 import space.devport.wertik.playtime.bungee.taskchain.BungeeTaskChainFactory;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.bungee.utils.BungeeCommonUtility;
+import space.devport.wertik.playtime.console.CommonLogger;
+import space.devport.wertik.playtime.mysql.ConnectionManager;
+import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
+import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
@@ -40,7 +46,7 @@ public class BungeePlayTimePlugin extends Plugin {
     private LocalUserManager localUserManager;
 
     @Getter
-    private BungeeConsoleOutput consoleOutput;
+    private BungeeLogger consoleOutput;
 
     private ConfigurationProvider configurationProvider;
 
@@ -54,17 +60,17 @@ public class BungeePlayTimePlugin extends Plugin {
     public void onEnable() {
         instance = this;
 
-        this.consoleOutput = new BungeeConsoleOutput(this);
+        this.consoleOutput = new BungeeLogger(this);
+        new BungeeCommonUtility(this);
 
         TaskChainFactoryHolder.setTaskChainFactory(BungeeTaskChainFactory.create(this));
-        CommonUtility.setImplementation(new BungeeCommonUtility());
 
         configurationProvider = ConfigurationProvider.getProvider(YamlConfiguration.class);
 
         loadConfig();
         loadOptions();
 
-        this.localUserManager = new LocalUserManager(initiateStorage());
+        this.localUserManager = new BungeeLocalUserManager(this, initiateStorage());
         this.localUserManager.loadAll(ProxyServer.getInstance().getPlayers().stream().map(ProxiedPlayer::getUniqueId).collect(Collectors.toSet()));
 
         getProxy().getPluginManager().registerListener(this, new BungeePlayerListener(this));
@@ -77,6 +83,7 @@ public class BungeePlayTimePlugin extends Plugin {
         this.localUserManager.saveAll();
 
         getProxy().getPluginManager().callEvent(new BungeePlayTimeDisableEvent());
+        ConnectionManager.getInstance().closeConnections();
     }
 
     public void reload(CommandSender sender) {
@@ -98,12 +105,13 @@ public class BungeePlayTimePlugin extends Plugin {
         if (section == null) return null;
 
         return new ConnectionInfo(section.getString("host"),
-                section.getInt("port"),
+                section.getInt("port", 3306),
                 section.getString("username"),
                 section.getString("password"),
                 section.getString("database"));
     }
 
+    @NotNull
     private IUserStorage initiateStorage() {
         StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
 
@@ -123,7 +131,7 @@ public class BungeePlayTimePlugin extends Plugin {
         }
 
         if (userStorage == null) {
-            AbstractConsoleOutput.getImplementation().err("Could not create a local storage. Cannot function properly.");
+            CommonLogger.getImplementation().err("Could not create a local storage. Cannot function properly.");
             return null;
         }
 

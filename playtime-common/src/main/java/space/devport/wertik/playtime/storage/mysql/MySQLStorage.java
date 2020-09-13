@@ -4,10 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
-import space.devport.wertik.playtime.CommonUtility;
-import space.devport.wertik.playtime.ServerConnection;
+import space.devport.wertik.playtime.utils.CommonUtility;
+import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 
@@ -27,16 +27,25 @@ public class MySQLStorage implements IUserStorage {
     @Setter
     private String tableName;
 
+    @Getter
+    private boolean networkServer = false;
+
     public MySQLStorage(ServerConnection connection, String tableName) {
         this.connection = connection;
         this.tableName = tableName;
+    }
+
+    public MySQLStorage(ServerConnection connection, String tableName, boolean networkServer) {
+        this.connection = connection;
+        this.tableName = tableName;
+        this.networkServer = networkServer;
     }
 
     @Override
     public void initialize() {
         TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.CREATE_TABLE.get(tableName))).execute((exception, task) -> {
             if (exception != null) exception.printStackTrace();
-            AbstractConsoleOutput.getImplementation().debug("MySQL storage initialized.");
+            CommonLogger.getImplementation().debug("MySQL storage initialized.");
         });
     }
 
@@ -44,7 +53,7 @@ public class MySQLStorage implements IUserStorage {
      * Name fallback query.
      */
     private long getTimeByName(String name) {
-        AbstractConsoleOutput.getImplementation().debug("Falling back to name, " + name);
+        CommonLogger.getImplementation().debug("Falling back to name, " + name);
         ResultSet resultSet = connection.executeQuery(Query.GET_TIME_NAME.get(tableName), name);
 
         long time = 0;
@@ -59,7 +68,6 @@ public class MySQLStorage implements IUserStorage {
         return time;
     }
 
-    //TODO Fallback even when the name isn't the same. There's little to no chance to UUID duplication, but just in case.
     @Override
     public User loadUser(UUID uniqueID) {
 
@@ -141,7 +149,7 @@ public class MySQLStorage implements IUserStorage {
      * Exists name fallback.
      */
     private boolean existsByName(String name) {
-        AbstractConsoleOutput.getImplementation().debug("Falling back to names, " + name);
+        CommonLogger.getImplementation().debug("Falling back to names, " + name);
         try {
             ResultSet rs = connection.executeQuery(Query.EXIST_CHECK_NAME.get(tableName), name);
             if (rs.next()) return true;

@@ -2,7 +2,7 @@ package space.devport.wertik.playtime.struct;
 
 import lombok.Getter;
 import lombok.Setter;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
 
 import java.util.UUID;
 
@@ -35,7 +35,7 @@ public class User {
 
     public void updatePlayedTime() {
         this.playedTime += sinceJoin();
-        AbstractConsoleOutput.getImplementation().debug("Updated played time for user " + uniqueID + " to " + this.playedTime);
+        CommonLogger.getImplementation().debug("Updated played time for user " + uniqueID + " to " + this.playedTime);
     }
 
     public long sinceJoin() {

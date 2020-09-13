@@ -2,10 +2,10 @@ package space.devport.wertik.playtime.spigot.console;
 
 import lombok.RequiredArgsConstructor;
 import space.devport.utils.ConsoleOutput;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
 
 @RequiredArgsConstructor
-public class SpigotConsoleOutput extends AbstractConsoleOutput {
+public class SpigotLogger extends CommonLogger {
 
     private final ConsoleOutput consoleOutput;
 

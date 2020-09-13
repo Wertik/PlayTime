@@ -33,11 +33,17 @@ public class PlayerListener implements Listener {
 
         // Set player online here, configure join time.
         user.setOnline();
+
+        // Update global
+        plugin.getGlobalUserManager().updateGlobalUser(player.getUniqueId());
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+
+        // Unload global
+        plugin.getGlobalUserManager().unloadGlobalUser(player.getUniqueId());
 
         // Unload the user
         if (plugin.getLocalUserManager().isLoaded(player.getUniqueId())) {

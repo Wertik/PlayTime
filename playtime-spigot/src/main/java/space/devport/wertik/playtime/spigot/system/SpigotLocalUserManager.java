@@ -9,6 +9,9 @@ import space.devport.wertik.playtime.system.LocalUserManager;
 
 import java.util.UUID;
 
+/**
+ * Override the base to import statistics.
+ */
 public class SpigotLocalUserManager extends LocalUserManager {
 
     private final PlayTimePlugin plugin;

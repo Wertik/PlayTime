@@ -22,7 +22,6 @@ enum Query {
 
     INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, lastKnownName, time) VALUES(?, ?, ?)"),
 
-    //UPDATE_USER("UPDATE '%table%' SET `lastKnownName` = ?, `time` = ? WHERE `uuid` = ?;"),
     UPDATE_USER("REPLACE INTO `%table%` (`uuid`, `lastKnownName`, `time`) VALUES (?, ?, ?)"),
 
     GET_TIME("SELECT `time` FROM `%table%` WHERE `uuid` = ?"),

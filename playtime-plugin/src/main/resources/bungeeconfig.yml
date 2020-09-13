@@ -5,6 +5,9 @@
 plugin-prefix: "&aPlayTime &8| "
 debug-enabled: true
 
+# Import and combine times from remote servers?
+import-connected-servers: true
+
 storage:
 
   # mysql/json
@@ -25,6 +28,12 @@ storage:
 
     # Table to use for local times.
     table: 'play-time'
+
+# Remote server definitions
+servers:
+  test:
+    password: 'password'
+    table: 'test'
 
 # Time formats
 formats:

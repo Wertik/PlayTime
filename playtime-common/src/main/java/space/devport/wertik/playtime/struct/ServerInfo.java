@@ -1,17 +1,24 @@
 package space.devport.wertik.playtime.struct;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 
-@RequiredArgsConstructor
 public class ServerInfo {
 
     @Getter
     private final String name;
     @Getter
-    private final boolean networkWide;
+    private boolean networkWide = false;
+
+    public ServerInfo(String name) {
+        this.name = name;
+    }
+
+    public ServerInfo(String name, boolean networkWide) {
+        this.name = name;
+        this.networkWide = networkWide;
+    }
 
     @Override
     public boolean equals(Object o) {

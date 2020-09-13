@@ -22,11 +22,6 @@ public class GlobalUser {
         this.uniqueID = uniqueID;
     }
 
-    @Deprecated
-    public long getPlayedTime(String serverName) {
-        return getPlayedTime(new ServerInfo(serverName, false));
-    }
-
     public long getPlayedTime(ServerInfo serverInfo) {
         long time = this.userRecord.containsKey(serverInfo) ? this.userRecord.get(serverInfo).getPlayedTimeRaw() : 0;
         if (serverInfo.isNetworkWide())
@@ -34,18 +29,8 @@ public class GlobalUser {
         return time;
     }
 
-    @Deprecated
-    public void updateRecord(String serverName, User user) {
-        updateRecord(new ServerInfo(serverName, false), user);
-    }
-
     public void updateRecord(ServerInfo info, User user) {
         this.userRecord.put(info, user);
-    }
-
-    @Deprecated
-    public void removeUserRecord(String serverName) {
-        removeUserRecord(new ServerInfo(serverName, false));
     }
 
     public void removeUserRecord(ServerInfo serverInfo) {

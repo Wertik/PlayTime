@@ -1,7 +1,9 @@
-package space.devport.wertik.playtime;
+package space.devport.wertik.playtime.mysql;
 
 import org.jetbrains.annotations.NotNull;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
+import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
+import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,21 +25,21 @@ public class ConnectionManager {
     }
 
     public ServerConnection initializeConnection(String name, ConnectionInfo info) {
-        AbstractConsoleOutput.getImplementation().debug("Attempting to connect to " + name + ", info: " + info.toString());
+        CommonLogger.getImplementation().debug("Attempting to connect to " + name + ", info: " + info.toString());
         ServerConnection serverConnection = attemptReroute(info);
 
         if (!serverConnection.isConnected()) {
             try {
                 serverConnection.connect();
             } catch (IllegalStateException e) {
-                if (AbstractConsoleOutput.getImplementation().isDebug())
+                if (CommonLogger.getImplementation().isDebug())
                     e.printStackTrace();
                 return null;
             }
         }
 
         this.connections.put(name, serverConnection);
-        AbstractConsoleOutput.getImplementation().debug("Initialized and registered connection to " + name + ", info: " + info);
+        CommonLogger.getImplementation().debug("Initialized and registered connection to " + name + ", info: " + info);
         return serverConnection;
     }
 
@@ -48,7 +50,7 @@ public class ConnectionManager {
     public ServerConnection attemptReroute(ConnectionInfo connectionInfo) {
         for (Map.Entry<String, ServerConnection> entry : this.connections.entrySet()) {
             if (entry.getValue().getConnectionInfo().compare(connectionInfo)) {
-                AbstractConsoleOutput.getImplementation().debug("Rerouting to " + entry.getKey());
+                CommonLogger.getImplementation().debug("Rerouting to " + entry.getKey());
                 return entry.getValue();
             }
         }

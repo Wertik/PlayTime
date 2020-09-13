@@ -1,15 +1,15 @@
 package space.devport.wertik.playtime.bungee.console;
 
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
 
-public class BungeeConsoleOutput extends AbstractConsoleOutput {
+public class BungeeLogger extends CommonLogger {
 
     private final BungeePlayTimePlugin plugin;
 
-    public BungeeConsoleOutput(BungeePlayTimePlugin plugin) {
+    public BungeeLogger(BungeePlayTimePlugin plugin) {
         this.plugin = plugin;
-        AbstractConsoleOutput.setImplementation(this);
+        CommonLogger.setImplementation(this);
     }
 
     @Override

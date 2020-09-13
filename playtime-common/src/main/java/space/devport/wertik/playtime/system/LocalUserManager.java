@@ -3,21 +3,23 @@ package space.devport.wertik.playtime.system;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
+import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.util.*;
 
 public class LocalUserManager {
 
-    private final Map<UUID, User> localUsers = new HashMap<>();
+    private final Map<UUID, User> loadedUsers = new HashMap<>();
 
     @Getter
     private final IUserStorage storage;
 
     public LocalUserManager(IUserStorage storage) {
         this.storage = storage;
+        DataManager.getInstance().setLocalUserManager(this);
     }
 
     public void loadAll(Set<UUID> players) {
@@ -27,7 +29,7 @@ public class LocalUserManager {
     }
 
     public void saveAll() {
-        for (User user : this.localUsers.values()) {
+        for (User user : this.loadedUsers.values()) {
             storage.saveUser(user);
         }
     }
@@ -36,10 +38,10 @@ public class LocalUserManager {
      * Save user to storage.
      */
     public boolean saveUser(UUID uniqueID) {
-        User user = this.localUsers.getOrDefault(uniqueID, null);
+        User user = this.loadedUsers.getOrDefault(uniqueID, null);
         if (user == null) return false;
         storage.saveUser(user);
-        AbstractConsoleOutput.getImplementation().debug("Saved user " + uniqueID);
+        CommonLogger.getImplementation().debug("Saved user " + uniqueID);
         return true;
     }
 
@@ -47,11 +49,11 @@ public class LocalUserManager {
      * Delete a user.
      */
     public void deleteUser(UUID uniqueID) {
-        User user = this.localUsers.getOrDefault(uniqueID, null);
+        User user = this.loadedUsers.getOrDefault(uniqueID, null);
         if (user == null) return;
-        this.localUsers.remove(uniqueID);
+        this.loadedUsers.remove(uniqueID);
         this.storage.deleteUser(user);
-        AbstractConsoleOutput.getImplementation().debug("Deleted user " + uniqueID);
+        CommonLogger.getImplementation().debug("Deleted user " + uniqueID);
     }
 
     /**
@@ -59,8 +61,8 @@ public class LocalUserManager {
      */
     public void unloadUser(UUID uniqueID) {
         if (saveUser(uniqueID)) {
-            this.localUsers.remove(uniqueID);
-            AbstractConsoleOutput.getImplementation().debug("Unloaded user " + uniqueID);
+            this.loadedUsers.remove(uniqueID);
+            CommonLogger.getImplementation().debug("Unloaded user " + uniqueID);
         }
     }
 
@@ -72,8 +74,8 @@ public class LocalUserManager {
 
         if (checkOnline(uniqueID)) user.setOnline();
 
-        this.localUsers.put(uniqueID, user);
-        AbstractConsoleOutput.getImplementation().debug("Created user " + uniqueID);
+        this.loadedUsers.put(uniqueID, user);
+        CommonLogger.getImplementation().debug("Created user " + uniqueID);
         return user;
     }
 
@@ -94,9 +96,9 @@ public class LocalUserManager {
      */
     @Nullable
     public User getUser(UUID uniqueID) {
-        if (!this.localUsers.containsKey(uniqueID))
+        if (!this.loadedUsers.containsKey(uniqueID))
             return loadUser(uniqueID);
-        return this.localUsers.getOrDefault(uniqueID, null);
+        return this.loadedUsers.getOrDefault(uniqueID, null);
     }
 
     /**
@@ -108,21 +110,21 @@ public class LocalUserManager {
         if (user != null) {
             if (checkOnline(uniqueID)) user.setOnline();
 
-            this.localUsers.put(uniqueID, user);
-            AbstractConsoleOutput.getImplementation().debug("Loaded user " + uniqueID);
+            this.loadedUsers.put(uniqueID, user);
+            CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
         }
         return user;
     }
 
     public boolean checkOnline(UUID uniqueID) {
-        return false;
+        return CommonUtility.getImplementation().isOnline(uniqueID);
     }
 
     public boolean isLoaded(UUID uniqueID) {
-        return this.localUsers.containsKey(uniqueID);
+        return this.loadedUsers.containsKey(uniqueID);
     }
 
-    public Map<UUID, User> getLocalUsers() {
-        return Collections.unmodifiableMap(this.localUsers);
+    public Map<UUID, User> getLoadedUsers() {
+        return Collections.unmodifiableMap(this.loadedUsers);
     }
 }

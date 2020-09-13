@@ -3,17 +3,14 @@ package space.devport.wertik.playtime.console;
 import lombok.Getter;
 import lombok.Setter;
 
-public abstract class AbstractConsoleOutput {
+public abstract class CommonLogger {
 
-    private static AbstractConsoleOutput implementation;
+    @Setter
+    private static CommonLogger implementation;
 
-    public static void setImplementation(AbstractConsoleOutput implementation) {
-        AbstractConsoleOutput.implementation = implementation;
-    }
-
-    public static AbstractConsoleOutput getImplementation() {
+    public static CommonLogger getImplementation() {
         if (implementation == null)
-            setImplementation(new DummyConsoleOutput());
+            setImplementation(new DummyCommonLogger());
         return implementation;
     }
 

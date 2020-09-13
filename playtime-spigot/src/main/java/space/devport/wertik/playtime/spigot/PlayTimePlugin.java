@@ -11,23 +11,27 @@ import org.bukkit.event.HandlerList;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
-import space.devport.wertik.playtime.*;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.TaskChainFactoryHolder;
+import space.devport.wertik.playtime.console.CommonLogger;
+import space.devport.wertik.playtime.mysql.ConnectionManager;
+import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
+import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.ReloadSubCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.ResetSubCommand;
-import space.devport.wertik.playtime.spigot.console.SpigotConsoleOutput;
+import space.devport.wertik.playtime.spigot.console.SpigotLogger;
 import space.devport.wertik.playtime.spigot.listeners.PlayerListener;
 import space.devport.wertik.playtime.spigot.system.SpigotLocalUserManager;
+import space.devport.wertik.playtime.spigot.utils.SpigotCommonUtility;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.storage.struct.StorageType;
-import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
+import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.util.stream.Collectors;
 
@@ -44,19 +48,18 @@ public class PlayTimePlugin extends DevportPlugin {
 
     @Override
     public void onPluginEnable() {
-        AbstractConsoleOutput.setImplementation(new SpigotConsoleOutput(consoleOutput));
+        CommonLogger.setImplementation(new SpigotLogger(consoleOutput));
         TaskChainFactoryHolder.setTaskChainFactory(BukkitTaskChainFactory.create(this));
         CommonUtility.setImplementation(new SpigotCommonUtility());
 
         loadOptions();
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
-        DataManager.getInstance().setLocalUserManager(this.localUserManager);
         this.localUserManager.loadAll(Bukkit.getOnlinePlayers().stream()
                 .map(Player::getUniqueId)
                 .collect(Collectors.toSet()));
 
-        initializeRemote();
+        initializeRemotes();
 
         new PlayTimeLanguage(this);
 
@@ -93,6 +96,7 @@ public class PlayTimePlugin extends DevportPlugin {
 
     public ConnectionInfo loadInfo(String path) {
         ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection(path);
+
         if (section == null) return null;
 
         return new ConnectionInfo(section.getString("host", "localhost"),
@@ -102,12 +106,11 @@ public class PlayTimePlugin extends DevportPlugin {
                 section.getString("database"));
     }
 
-    private void initializeRemote() {
+    private void initializeRemotes() {
         if (!configuration.getFileConfiguration().getBoolean("use-remotes", false)) return;
 
         consoleOutput.info("Starting remote connections and cache...");
         this.globalUserManager = new GlobalUserManager();
-        DataManager.getInstance().setGlobalUserManager(this.globalUserManager);
 
         ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection("servers");
         if (section == null) return;
@@ -126,7 +129,6 @@ public class PlayTimePlugin extends DevportPlugin {
         }
     }
 
-    //TODO Merge with Bungee, same.
     private IUserStorage initiateStorage() {
         StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
 
@@ -146,7 +148,7 @@ public class PlayTimePlugin extends DevportPlugin {
         }
 
         if (userStorage == null) {
-            AbstractConsoleOutput.getImplementation().err("Could not create a local storage. Cannot function properly.");
+            CommonLogger.getImplementation().err("Could not create a local storage. Cannot function properly.");
             return null;
         }
 

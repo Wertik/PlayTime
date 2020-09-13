@@ -1,8 +1,8 @@
-package space.devport.wertik.playtime;
+package space.devport.wertik.playtime.mysql.struct;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
-import space.devport.wertik.playtime.console.AbstractConsoleOutput;
+import space.devport.wertik.playtime.console.CommonLogger;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
@@ -69,7 +69,7 @@ public class ServerConnection {
             }
 
             statement.execute();
-            AbstractConsoleOutput.getImplementation().debug("Executed statement " + statement.toString());
+            CommonLogger.getImplementation().debug("Executed statement " + statement.toString());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -91,7 +91,7 @@ public class ServerConnection {
             CachedRowSet resultCached = RowSetProvider.newFactory().createCachedRowSet();
             ResultSet resultSet = statement.executeQuery();
 
-            AbstractConsoleOutput.getImplementation().debug("Executed query " + statement.toString());
+            CommonLogger.getImplementation().debug("Executed query " + statement.toString());
 
             resultCached.populate(resultSet);
             resultSet.close();

@@ -1,4 +1,4 @@
-package space.devport.wertik.playtime;
+package space.devport.wertik.playtime.mysql.struct;
 
 import lombok.Getter;
 import lombok.Setter;

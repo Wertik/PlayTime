@@ -1,9 +1,9 @@
 package space.devport.wertik.playtime.console;
 
 /**
- * Fall here if no console output is defined.
+ * Fall here if no logger is implemented.
  */
-public class DummyConsoleOutput extends AbstractConsoleOutput {
+public class DummyCommonLogger extends CommonLogger {
 
     @Override
     public void err(String msg) {

@@ -13,9 +13,6 @@ import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
-import space.devport.wertik.playtime.struct.User;
-
-import java.util.Map;
 
 public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
@@ -37,8 +34,9 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
             target = (Player) sender;
         }
 
-        GlobalUser globalUser = getPlugin().getGlobalUserManager().fetchGlobalUser(target.getUniqueId());
-        sender.sendMessage("Fetched global user " + globalUser.getUniqueID() + ", name: " + Bukkit.getOfflinePlayer(globalUser.getUniqueID()).getName());
+        //TODO Beautify
+        GlobalUser globalUser = getPlugin().getGlobalUserManager().getGlobalUser(target.getUniqueId());
+        sender.sendMessage("Global user " + globalUser.getUniqueID() + ", name: " + Bukkit.getOfflinePlayer(globalUser.getUniqueID()).getName());
         for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
             sender.sendMessage(StringUtil.color("Time on " + serverInfo.getName() + " = " + DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
         }
