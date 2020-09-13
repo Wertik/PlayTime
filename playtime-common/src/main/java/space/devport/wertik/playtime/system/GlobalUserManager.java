@@ -25,14 +25,20 @@ public class GlobalUserManager {
     /**
      * @param serverName Name of the server and the table to connect to.
      */
-    public void initializeStorage(String serverName, ConnectionInfo connectionInfo, String tableName) {
-        if (this.storages.containsKey(serverName)) return;
+    public boolean initializeStorage(String serverName, ConnectionInfo connectionInfo, String tableName) {
+        if (this.storages.containsKey(serverName)) return false;
 
         ServerConnection connection = ConnectionManager.getInstance().initializeConnection(serverName, connectionInfo);
-        MySQLStorage storage = new MySQLStorage(connection, tableName);
-        this.storages.put(serverName, storage);
 
-        AbstractConsoleOutput.getImplementation().debug("Initialized remote storage for server " + serverName + " with table " + tableName);
+        if (connection == null) {
+            AbstractConsoleOutput.getImplementation().err("Could not initialize remote storage " + serverName + " with table " + tableName);
+            return false;
+        } else {
+            MySQLStorage storage = new MySQLStorage(connection, tableName);
+            this.storages.put(serverName, storage);
+            AbstractConsoleOutput.getImplementation().info("Initialized remote storage for server " + serverName + " with table " + tableName);
+            return true;
+        }
     }
 
     @NotNull

@@ -12,6 +12,7 @@ import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
 import space.devport.wertik.playtime.ConnectionInfo;
+import space.devport.wertik.playtime.ConnectionManager;
 import space.devport.wertik.playtime.ServerConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
@@ -57,7 +58,7 @@ public class PlayTimePlugin extends DevportPlugin {
 
         initializeRemote();
 
-        new PlayTimeLanguage();
+        new PlayTimeLanguage(this);
 
         registerPlaceholders();
 
@@ -74,6 +75,7 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onPluginDisable() {
         HandlerList.unregisterAll(this);
         this.localUserManager.saveAll();
+        ConnectionManager.getInstance().closeConnections();
     }
 
     /**
@@ -116,10 +118,11 @@ public class PlayTimePlugin extends DevportPlugin {
         }
     }
 
+    //TODO Merge with Bungee, same.
     private IUserStorage initiateStorage() {
         StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
 
-        IUserStorage userStorage;
+        IUserStorage userStorage = null;
         switch (storageType) {
             default:
             case JSON:
@@ -127,10 +130,16 @@ public class PlayTimePlugin extends DevportPlugin {
                 break;
             case MYSQL:
                 ConnectionInfo connectionInfo = loadInfo("storage.mysql");
-                ServerConnection serverConnection = new ServerConnection(connectionInfo);
+                ServerConnection serverConnection = ConnectionManager.getInstance().initializeConnection("local", connectionInfo);
 
-                userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
+                if (serverConnection != null)
+                    userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
                 break;
+        }
+
+        if (userStorage == null) {
+            AbstractConsoleOutput.getImplementation().err("Could not create a local storage. Cannot function properly.");
+            return null;
         }
 
         userStorage.initialize();

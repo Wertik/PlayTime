@@ -35,7 +35,7 @@ public class MySQLStorage implements IUserStorage {
     public void initialize() {
         TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.CREATE_TABLE.get(tableName))).execute((exception, task) -> {
             if (exception != null) exception.printStackTrace();
-            AbstractConsoleOutput.getImplementation().debug("MySQL storage initiated.");
+            AbstractConsoleOutput.getImplementation().debug("MySQL storage initialized.");
         });
     }
 

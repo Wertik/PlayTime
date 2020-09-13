@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
+import space.devport.utils.text.StringUtil;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.GlobalUser;
@@ -25,8 +26,8 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
 
         OfflinePlayer target;
-        if (args.length > 0) {
-            target = Bukkit.getOfflinePlayer(args[0]);
+        if (args.length > 1) {
+            target = Bukkit.getOfflinePlayer(args[1]);
 
             if (!sender.hasPermission("playtime.check.others")) return CommandResult.NO_PERMISSION;
         } else {
@@ -38,7 +39,7 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
         GlobalUser globalUser = getPlugin().getGlobalUserManager().fetchGlobalUser(target.getUniqueId());
         sender.sendMessage("Fetched global user " + globalUser.getUniqueID() + ", name: " + Bukkit.getOfflinePlayer(globalUser.getUniqueID()).getName());
         for (Map.Entry<String, User> entry : globalUser.getUserRecord().entrySet()) {
-            sender.sendMessage("Time on " + entry.getKey() + " = " + DurationFormatUtils.formatDuration(entry.getValue().getPlayedTimeRaw(), getPlugin().getDurationFormat()));
+            sender.sendMessage(StringUtil.color("Time on " + entry.getKey() + " = " + DurationFormatUtils.formatDuration(entry.getValue().getPlayedTimeRaw(), getPlugin().getDurationFormat())));
         }
         sender.sendMessage("Simplistic implementation.");
         return CommandResult.SUCCESS;

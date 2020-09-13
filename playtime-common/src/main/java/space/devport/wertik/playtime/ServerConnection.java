@@ -18,6 +18,9 @@ public class ServerConnection {
 
     private HikariDataSource hikari;
 
+    @Getter
+    private boolean connected = false;
+
     public ServerConnection(ConnectionInfo connectionInfo) {
         this.connectionInfo = connectionInfo;
     }
@@ -41,10 +44,18 @@ public class ServerConnection {
         hikari.addDataSourceProperty("characterEncoding", "utf8");
         hikari.addDataSourceProperty("useUnicode", "true");
 
-        hikari.validate();
+        try {
+            hikari.validate();
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException(e);
+        }
+
+        this.connected = true;
     }
 
     public void execute(String query, Object... parameters) {
+
+        if (!isConnected()) return;
 
         try (Connection connection = hikari.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
@@ -63,6 +74,8 @@ public class ServerConnection {
     }
 
     public ResultSet executeQuery(String query, Object... parameters) {
+
+        if (!isConnected()) return null;
 
         try (Connection connection = hikari.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {

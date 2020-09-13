@@ -31,6 +31,11 @@ public class ConnectionInfo {
         this.database = info.getDatabase();
     }
 
+    @Override
+    public String toString() {
+        return username + "@" + host + ":" + port + "/" + database + " -p " + password;
+    }
+
     /**
      * Don't override #equals().
      */

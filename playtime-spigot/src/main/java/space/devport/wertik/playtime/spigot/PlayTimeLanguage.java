@@ -1,8 +1,13 @@
 package space.devport.wertik.playtime.spigot;
 
+import space.devport.utils.DevportPlugin;
 import space.devport.utils.text.language.LanguageDefaults;
 
 public class PlayTimeLanguage extends LanguageDefaults {
+
+    public PlayTimeLanguage(DevportPlugin plugin) {
+        super(plugin);
+    }
 
     @Override
     public void setDefaults() {

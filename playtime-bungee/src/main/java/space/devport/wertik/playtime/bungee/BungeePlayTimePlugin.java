@@ -18,6 +18,7 @@ import space.devport.wertik.playtime.bungee.console.BungeeConsoleOutput;
 import space.devport.wertik.playtime.bungee.events.BungeePlayTimeDisableEvent;
 import space.devport.wertik.playtime.bungee.listeners.BungeePlayerListener;
 import space.devport.wertik.playtime.bungee.taskchain.BungeeTaskChainFactory;
+import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
@@ -108,7 +109,7 @@ public class BungeePlayTimePlugin extends Plugin {
     private IUserStorage initiateStorage() {
         StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
 
-        IUserStorage userStorage;
+        IUserStorage userStorage = null;
         switch (storageType) {
             default:
             case JSON:
@@ -118,8 +119,14 @@ public class BungeePlayTimePlugin extends Plugin {
                 ConnectionInfo connectionInfo = loadInfo("storage.mysql");
                 ServerConnection serverConnection = ConnectionManager.getInstance().initializeConnection("local", connectionInfo);
 
-                userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
+                if (serverConnection != null)
+                    userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
                 break;
+        }
+
+        if (userStorage == null) {
+            AbstractConsoleOutput.getImplementation().err("Could not create a local storage. Cannot function properly.");
+            return null;
         }
 
         userStorage.initialize();
