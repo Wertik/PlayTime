@@ -41,6 +41,9 @@ public class MySQLStorage implements IUserStorage {
 
     @Override
     public User loadUser(UUID uniqueID) {
+
+        if (!exists(uniqueID)) return null;
+
         User user = new User(uniqueID);
 
         long time = 0;

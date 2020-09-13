@@ -8,6 +8,8 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import space.devport.utils.DevportPlugin;
+import space.devport.utils.UsageFlag;
+import space.devport.utils.utility.VersionUtil;
 import space.devport.wertik.playtime.MySQLConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
@@ -108,7 +110,7 @@ public class PlayTimePlugin extends DevportPlugin {
 
                 //TODO change table name to server names when appropriate
                 // Add server names with mysql information into config.yml
-                userStorage = new MySQLStorage(connection, "play-time");
+                userStorage = new MySQLStorage(connection, this.configuration.getString("storage.mysql.table", "playtime"));
                 break;
         }
 
@@ -119,8 +121,10 @@ public class PlayTimePlugin extends DevportPlugin {
     private void registerPlaceholders() {
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
 
-            // On version 2.10.7+ attempt to unregister expansion.
-            if (PlaceholderAPI.isRegistered("playtime") && compileVersionNumber(getServer().getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion()) >= 2107) {
+            // On version 2.10.9+ attempt to unregister expansion.
+            if (PlaceholderAPI.isRegistered("playtime") &&
+                    VersionUtil.compareVersions("2.10.9", PlaceholderAPIPlugin.getInstance().getDescription().getVersion()) < 1) {
+
                 PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
 
                 if (expansion != null) {
@@ -147,17 +151,7 @@ public class PlayTimePlugin extends DevportPlugin {
     }
 
     @Override
-    public boolean useLanguage() {
-        return true;
-    }
-
-    @Override
-    public boolean useHolograms() {
-        return false;
-    }
-
-    @Override
-    public boolean useMenus() {
-        return false;
+    public UsageFlag[] usageFlags() {
+        return new UsageFlag[]{UsageFlag.LANGUAGE, UsageFlag.CONFIGURATION, UsageFlag.COMMANDS};
     }
 }

@@ -4,6 +4,9 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import space.devport.utils.text.StringUtil;
+import space.devport.wertik.playtime.TimeElement;
+import space.devport.wertik.playtime.TimeUtil;
 import space.devport.wertik.playtime.struct.User;
 
 public class PlayTimeExpansion extends PlaceholderExpansion {
@@ -35,17 +38,25 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
         String[] args = params.split("_");
 
+        if (player == null) return "no_player";
+
+        User user = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId());
+
         if (args.length == 0) {
-            User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
-            if (user == null) return "0";
             return String.valueOf(user.getPlayedTime());
         } else {
+
+            TimeElement timeElement = TimeElement.fromString(args[0]);
+
+            if (timeElement != null) {
+                int val = TimeUtil.takeElement(user.getPlayedTime(), timeElement, args.length > 1 && args[1].equalsIgnoreCase("start"));
+                return String.valueOf(val);
+            }
+
             //TODO
             switch (args[0].toLowerCase()) {
                 case "formatted":
-                    User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
-                    if (user == null) return "0";
-                    return DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat());
+                    return StringUtil.color(DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat()));
             }
         }
         return "invalid_params";

@@ -1,8 +1,6 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
@@ -10,7 +8,6 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class LocalUserManager {
 
@@ -72,6 +69,9 @@ public class LocalUserManager {
      */
     public User createUser(UUID uniqueID) {
         User user = new User(uniqueID);
+
+        if (checkOnline(uniqueID)) user.setOnline();
+
         this.localUsers.put(uniqueID, user);
         AbstractConsoleOutput.getImplementation().debug("Created user " + uniqueID);
         return user;
@@ -84,14 +84,8 @@ public class LocalUserManager {
      */
     @NotNull
     public User getOrCreateUser(UUID uniqueID) {
-        User user = this.localUsers.getOrDefault(uniqueID, null);
-
-        AbstractConsoleOutput.getImplementation().debug("User " + uniqueID + " is not cached.");
-
-        if (user == null) user = loadUser(uniqueID);
-        if (user == null) user = createUser(uniqueID);
-
-        return user;
+        User user = getUser(uniqueID);
+        return user != null ? user : createUser(uniqueID);
     }
 
     /**
@@ -100,7 +94,6 @@ public class LocalUserManager {
      */
     @Nullable
     public User getUser(UUID uniqueID) {
-        AbstractConsoleOutput.getImplementation().debug("Users: " + this.localUsers.values().stream().map(u -> u.getUniqueID().toString()).collect(Collectors.joining(", ")));
         if (!this.localUsers.containsKey(uniqueID))
             return loadUser(uniqueID);
         return this.localUsers.getOrDefault(uniqueID, null);
@@ -111,17 +104,18 @@ public class LocalUserManager {
      */
     public User loadUser(UUID uniqueID) {
         User user = storage.loadUser(uniqueID);
+
         if (user != null) {
-
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(user.getUniqueID());
-
-            if (offlinePlayer.isOnline())
-                user.setOnline();
+            if (checkOnline(uniqueID)) user.setOnline();
 
             this.localUsers.put(uniqueID, user);
             AbstractConsoleOutput.getImplementation().debug("Loaded user " + uniqueID);
         }
         return user;
+    }
+
+    public boolean checkOnline(UUID uniqueID) {
+        return false;
     }
 
     public boolean isLoaded(UUID uniqueID) {

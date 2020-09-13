@@ -6,3 +6,4 @@ softdepend: [PlaceholderAPI]
 commands:
   playtime:
     description: Main plugin command.
+    aliases: [pt]
