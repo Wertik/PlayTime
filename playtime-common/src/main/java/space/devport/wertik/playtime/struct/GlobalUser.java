@@ -21,6 +21,18 @@ public class GlobalUser {
         this.uniqueID = uniqueID;
     }
 
+    public long getPlayedTime(String serverName) {
+        return this.userRecord.containsKey(serverName) ? this.userRecord.get(serverName).getPlayedTimeRaw() : 0;
+    }
+
+    public void updateRecord(String serverName, User user) {
+        this.userRecord.put(serverName, user);
+    }
+
+    public void removeUserRecord(String serverName) {
+        this.userRecord.remove(serverName);
+    }
+
     public Map<String, User> getUserRecord() {
         return Collections.unmodifiableMap(userRecord);
     }

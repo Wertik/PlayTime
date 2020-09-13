@@ -5,10 +5,6 @@
 plugin-prefix: "&aPlayTime &8| "
 debug-enabled: true
 
-# Try to import time from statistics when a user with no record is created?
-# There are no statistics on Bungee.
-import-statistics: true
-
 storage:
 
   # mysql/json
@@ -26,18 +22,9 @@ storage:
     username: 'root'
     password: 'password'
     database: 'playtime'
-    pool-size: 10
 
     # Table to use for local times.
-    table: 'test-local'
-
-# Settings for bungee network (or just multiple servers running with this plugin)
-# All of them have to be running on MySQL.
-servers:
-  test:
-    # You can override from the general mysql settings.
-    #database: 'playtime-2'
-    table: 'test-remote'
+    table: 'play-time'
 
 # Time formats
 formats:

@@ -5,12 +5,14 @@ import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
-import space.devport.wertik.playtime.MySQLConnection;
+import space.devport.wertik.playtime.ConnectionInfo;
+import space.devport.wertik.playtime.ServerConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
@@ -53,8 +55,7 @@ public class PlayTimePlugin extends DevportPlugin {
                 .map(Player::getUniqueId)
                 .collect(Collectors.toSet()));
 
-        //TODO
-        //this.globalUserManager = new GlobalUserManager();
+        initializeRemote();
 
         new PlayTimeLanguage();
 
@@ -88,6 +89,33 @@ public class PlayTimePlugin extends DevportPlugin {
         loadOptions();
     }
 
+    public ConnectionInfo loadInfo(String path) {
+        ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection(path);
+        if (section == null) return null;
+
+        return new ConnectionInfo(section.getString("host", "localhost"),
+                section.getInt("port", 3306),
+                section.getString("username", "root"),
+                section.getString("password"),
+                section.getString("database"));
+    }
+
+    private void initializeRemote() {
+        if (!configuration.getFileConfiguration().getBoolean("use-remotes", false)) return;
+
+        consoleOutput.info("Starting remote connections and cache...");
+        this.globalUserManager = new GlobalUserManager();
+
+        ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection("servers");
+        if (section == null) return;
+
+        for (String serverName : section.getKeys(false)) {
+            ConnectionInfo connectionInfo = loadInfo("servers." + serverName);
+            if (connectionInfo == null) return;
+            globalUserManager.initializeStorage(serverName, connectionInfo, section.getString(serverName + ".table", serverName));
+        }
+    }
+
     private IUserStorage initiateStorage() {
         StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
 
@@ -98,17 +126,10 @@ public class PlayTimePlugin extends DevportPlugin {
                 userStorage = new JsonStorage();
                 break;
             case MYSQL:
-                MySQLConnection connection = new MySQLConnection(configuration.getString("storage.mysql.host"),
-                        getConfig().getInt("storage.mysql.port"),
-                        getConfig().getString("storage.mysql.username"),
-                        getConfig().getString("storage.mysql.password"),
-                        getConfig().getString("storage.mysql.database"),
-                        getConfig().getInt("storage.mysql.pool-size", 10));
-                connection.connect();
+                ConnectionInfo connectionInfo = loadInfo("storage.mysql");
+                ServerConnection serverConnection = new ServerConnection(connectionInfo);
 
-                //TODO change table name to server names when appropriate
-                // Add server names with mysql information into config.yml
-                userStorage = new MySQLStorage(connection, "play-time");
+                userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
                 break;
         }
 
@@ -117,10 +138,10 @@ public class PlayTimePlugin extends DevportPlugin {
     }
 
     private void registerPlaceholders() {
-        if (pluginManager.getPlugin("PlaceholderAPI") != null) {
+        if (getPluginManager().getPlugin("PlaceholderAPI") != null) {
 
             // On version 2.10.9+ unregister expansion.
-            if (VersionUtil.compareVersions("2.10.9", pluginManager.getPlugin("PlaceholderAPI").getDescription().getVersion()) < 1) {
+            if (VersionUtil.compareVersions("2.10.9", getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion()) < 1) {
                 PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
 
                 if (expansion != null) {

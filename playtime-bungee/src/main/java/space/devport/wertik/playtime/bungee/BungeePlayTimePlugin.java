@@ -9,7 +9,9 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import space.devport.wertik.playtime.MySQLConnection;
+import space.devport.wertik.playtime.ConnectionInfo;
+import space.devport.wertik.playtime.ConnectionManager;
+import space.devport.wertik.playtime.ServerConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.bungee.commands.BungeePlayTimeCommand;
 import space.devport.wertik.playtime.bungee.console.BungeeConsoleOutput;
@@ -92,6 +94,17 @@ public class BungeePlayTimePlugin extends Plugin {
         this.durationFormat = configuration.getString("formats.duration", "H'h' m'm' s's'");
     }
 
+    public ConnectionInfo loadInfo(String path) {
+        Configuration section = configuration.getSection(path);
+        if (section == null) return null;
+
+        return new ConnectionInfo(section.getString("host"),
+                section.getInt("port"),
+                section.getString("username"),
+                section.getString("password"),
+                section.getString("database"));
+    }
+
     private IUserStorage initiateStorage() {
         StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
 
@@ -102,16 +115,10 @@ public class BungeePlayTimePlugin extends Plugin {
                 userStorage = new JsonStorage();
                 break;
             case MYSQL:
-                MySQLConnection connection = new MySQLConnection(configuration.getString("storage.mysql.host"),
-                        getConfig().getInt("storage.mysql.port"),
-                        getConfig().getString("storage.mysql.username"),
-                        getConfig().getString("storage.mysql.password"),
-                        getConfig().getString("storage.mysql.database"),
-                        getConfig().getInt("storage.mysql.pool-size", 10));
-                connection.connect();
+                ConnectionInfo connectionInfo = loadInfo("storage.mysql");
+                ServerConnection serverConnection = ConnectionManager.getInstance().initializeConnection("local", connectionInfo);
 
-                //TODO change table name
-                userStorage = new MySQLStorage(connection, "play-time");
+                userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
                 break;
         }
 

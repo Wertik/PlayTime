@@ -1,11 +1,19 @@
 package space.devport.wertik.playtime.spigot.commands.subcommands;
 
+import org.apache.commons.lang.time.DurationFormatUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
+import space.devport.wertik.playtime.struct.GlobalUser;
+import space.devport.wertik.playtime.struct.User;
+
+import java.util.Map;
 
 public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
@@ -16,29 +24,23 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
 
-        sender.sendMessage("&cNot implemented yet.");
-
-        /*
         OfflinePlayer target;
         if (args.length > 0) {
-            target = CommandUtils.getOfflineTarget(sender, args[0]);
+            target = Bukkit.getOfflinePlayer(args[0]);
 
-            if (target == null) return CommandResult.FAILURE;
-
-            if (!sender.hasPermission("playtime.checkglobal.others")) return CommandResult.NO_PERMISSION;
+            if (!sender.hasPermission("playtime.check.others")) return CommandResult.NO_PERMISSION;
         } else {
             if (!(sender instanceof Player)) return CommandResult.NO_CONSOLE;
 
             target = (Player) sender;
         }
 
-        User user = PlayTimePlugin.getInstance().getLocalUserManager().getUser(target.getUniqueId());
-        if (user == null) {
-            //TODO err msg
-            return CommandResult.FAILURE;
+        GlobalUser globalUser = getPlugin().getGlobalUserManager().fetchGlobalUser(target.getUniqueId());
+        sender.sendMessage("Fetched global user " + globalUser.getUniqueID() + ", name: " + Bukkit.getOfflinePlayer(globalUser.getUniqueID()).getName());
+        for (Map.Entry<String, User> entry : globalUser.getUserRecord().entrySet()) {
+            sender.sendMessage("Time on " + entry.getKey() + " = " + DurationFormatUtils.formatDuration(entry.getValue().getPlayedTimeRaw(), getPlugin().getDurationFormat()));
         }
-
-        //TODO msg*/
+        sender.sendMessage("Simplistic implementation.");
         return CommandResult.SUCCESS;
     }
 

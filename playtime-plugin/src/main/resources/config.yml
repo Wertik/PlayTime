@@ -26,17 +26,21 @@ storage:
     username: 'root'
     password: 'password'
     database: 'playtime'
-    pool-size: 10
 
     # Table to use for local times.
-    table: 'test-local'
+    table: 'play-time'
+
+use-remotes: true
 
 # Settings for bungee network (or just multiple servers running with this plugin)
 # All of them have to be running on MySQL.
 servers:
   test:
-    # You can override from the general mysql settings.
-    #database: 'playtime-2'
+    host: 'localhost'
+    port: 3306
+    username: 'root'
+    password: 'password'
+    database: 'playtime'
     table: 'test-remote'
 
 # Time formats

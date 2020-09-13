@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
-import space.devport.wertik.playtime.MySQLConnection;
+import space.devport.wertik.playtime.ServerConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.storage.IUserStorage;
@@ -20,13 +20,13 @@ import java.util.function.Function;
 public class MySQLStorage implements IUserStorage {
 
     @Getter
-    private final MySQLConnection connection;
+    private final ServerConnection connection;
 
     @Getter
     @Setter
     private String tableName;
 
-    public MySQLStorage(MySQLConnection connection, String tableName) {
+    public MySQLStorage(ServerConnection connection, String tableName) {
         this.connection = connection;
         this.tableName = tableName;
     }
