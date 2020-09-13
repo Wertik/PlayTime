@@ -1,6 +1,7 @@
 package space.devport.wertik.playtime.bungee.system;
 
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
+import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.User;
@@ -45,7 +46,9 @@ public class BungeeLocalUserManager extends LocalUserManager {
         GlobalUser globalUser = DataManager.getInstance().getGlobalUserManager().getGlobalUser(user.getUniqueID());
         long total = globalUser.totalTime();
 
-        if (user.getPlayedTime() < total)
+        if (user.getPlayedTime() < total) {
             user.setPlayedTime(total);
+            CommonLogger.getImplementation().debug("Imported time from remote servers for user " + user.getUniqueID() + " = " + total);
+        }
     }
 }
