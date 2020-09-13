@@ -1,6 +1,7 @@
 package space.devport.wertik.playtime;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class ConnectionInfo {
 
@@ -14,6 +15,9 @@ public class ConnectionInfo {
     private final String password;
     @Getter
     private final String database;
+    @Getter
+    @Setter
+    private boolean readOnly = false;
 
     public ConnectionInfo(String host, int port, String username, String password, String database) {
         this.host = host;

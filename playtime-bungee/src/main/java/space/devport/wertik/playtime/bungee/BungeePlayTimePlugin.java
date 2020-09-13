@@ -9,10 +9,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import space.devport.wertik.playtime.ConnectionInfo;
-import space.devport.wertik.playtime.ConnectionManager;
-import space.devport.wertik.playtime.ServerConnection;
-import space.devport.wertik.playtime.TaskChainFactoryHolder;
+import space.devport.wertik.playtime.*;
 import space.devport.wertik.playtime.bungee.commands.BungeePlayTimeCommand;
 import space.devport.wertik.playtime.bungee.console.BungeeConsoleOutput;
 import space.devport.wertik.playtime.bungee.events.BungeePlayTimeDisableEvent;
@@ -60,6 +57,7 @@ public class BungeePlayTimePlugin extends Plugin {
         this.consoleOutput = new BungeeConsoleOutput(this);
 
         TaskChainFactoryHolder.setTaskChainFactory(BungeeTaskChainFactory.create(this));
+        CommonUtility.setImplementation(new BungeeCommonUtility());
 
         configurationProvider = ConfigurationProvider.getProvider(YamlConfiguration.class);
 

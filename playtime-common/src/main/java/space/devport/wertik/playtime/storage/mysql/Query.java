@@ -18,12 +18,16 @@ enum Query {
 
     EXIST_CHECK("SELECT uuid from `%table%` WHERE `uuid` = ?"),
 
+    EXIST_CHECK_NAME("SELECT lastKnownName from `%table%` WHERE `lastKnownName` = ?"),
+
     INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, lastKnownName, time) VALUES(?, ?, ?)"),
 
     //UPDATE_USER("UPDATE '%table%' SET `lastKnownName` = ?, `time` = ? WHERE `uuid` = ?;"),
     UPDATE_USER("REPLACE INTO `%table%` (`uuid`, `lastKnownName`, `time`) VALUES (?, ?, ?)"),
 
     GET_TIME("SELECT `time` FROM `%table%` WHERE `uuid` = ?"),
+
+    GET_TIME_NAME("SELECT `time` FROM `%table%` WHERE `lastKnownName` = ?"),
 
     GET_TOP_TEN("SELECT * FROM `%table%` ORDER BY `time` DESC LIMIT 10");
 

@@ -44,6 +44,8 @@ public class ServerConnection {
         hikari.addDataSourceProperty("characterEncoding", "utf8");
         hikari.addDataSourceProperty("useUnicode", "true");
 
+        hikari.setReadOnly(connectionInfo.isReadOnly());
+
         try {
             hikari.validate();
         } catch (IllegalStateException e) {

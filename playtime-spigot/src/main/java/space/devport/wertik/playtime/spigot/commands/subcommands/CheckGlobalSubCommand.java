@@ -12,6 +12,7 @@ import space.devport.utils.text.StringUtil;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.GlobalUser;
+import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
 import java.util.Map;
@@ -26,8 +27,8 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
 
         OfflinePlayer target;
-        if (args.length > 1) {
-            target = Bukkit.getOfflinePlayer(args[1]);
+        if (args.length > 0) {
+            target = Bukkit.getOfflinePlayer(args[0]);
 
             if (!sender.hasPermission("playtime.check.others")) return CommandResult.NO_PERMISSION;
         } else {
@@ -38,8 +39,8 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
         GlobalUser globalUser = getPlugin().getGlobalUserManager().fetchGlobalUser(target.getUniqueId());
         sender.sendMessage("Fetched global user " + globalUser.getUniqueID() + ", name: " + Bukkit.getOfflinePlayer(globalUser.getUniqueID()).getName());
-        for (Map.Entry<String, User> entry : globalUser.getUserRecord().entrySet()) {
-            sender.sendMessage(StringUtil.color("Time on " + entry.getKey() + " = " + DurationFormatUtils.formatDuration(entry.getValue().getPlayedTimeRaw(), getPlugin().getDurationFormat())));
+        for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
+            sender.sendMessage(StringUtil.color("Time on " + serverInfo.getName() + " = " + DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
         }
         sender.sendMessage("Simplistic implementation.");
         return CommandResult.SUCCESS;
@@ -47,7 +48,7 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
     @Override
     public @NotNull String getDefaultUsage() {
-        return "/%label% checkglobal <server> (player)";
+        return "/%label% checkglobal (player)";
     }
 
     @Override
@@ -57,6 +58,6 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
     @Override
     public @NotNull ArgumentRange getRange() {
-        return new ArgumentRange(1, 2);
+        return new ArgumentRange(0, 1);
     }
 }

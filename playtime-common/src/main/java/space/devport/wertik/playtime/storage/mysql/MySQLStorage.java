@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
+import space.devport.wertik.playtime.CommonUtility;
 import space.devport.wertik.playtime.ServerConnection;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
@@ -39,6 +40,26 @@ public class MySQLStorage implements IUserStorage {
         });
     }
 
+    /**
+     * Name fallback query.
+     */
+    private long getTimeByName(String name) {
+        AbstractConsoleOutput.getImplementation().debug("Falling back to name, " + name);
+        ResultSet resultSet = connection.executeQuery(Query.GET_TIME_NAME.get(tableName), name);
+
+        long time = 0;
+        if (resultSet != null)
+            try {
+                if (resultSet.next()) {
+                    time = resultSet.getLong("time");
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        return time;
+    }
+
+    //TODO Fallback even when the name isn't the same. There's little to no chance to UUID duplication, but just in case.
     @Override
     public User loadUser(UUID uniqueID) {
 
@@ -50,15 +71,16 @@ public class MySQLStorage implements IUserStorage {
 
         ResultSet resultSet = connection.executeQuery(Query.GET_TIME.get(tableName), uniqueID.toString());
 
-        if (resultSet != null)
-            try {
-                if (resultSet.next()) {
-                    //AbstractConsoleOutput.getImplementation().debug(resultSet.findColumn("time") + "");
-                    time = resultSet.getLong("time");
-                }
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
+        try {
+            if (resultSet == null || !resultSet.next()) {
+                String name = CommonUtility.getImplementation().getOfflinePlayerName(uniqueID);
+                if (name != null)
+                    time = getTimeByName(name);
+            } else
+                time = resultSet.getLong("time");
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
 
         user.setPlayedTime(time);
         return user;
@@ -116,12 +138,31 @@ public class MySQLStorage implements IUserStorage {
     }
 
     /**
+     * Exists name fallback.
+     */
+    private boolean existsByName(String name) {
+        AbstractConsoleOutput.getImplementation().debug("Falling back to names, " + name);
+        try {
+            ResultSet rs = connection.executeQuery(Query.EXIST_CHECK_NAME.get(tableName), name);
+            if (rs.next()) return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
      * Check if the table has this entry.
      */
     public boolean exists(UUID uuid) {
         try {
             ResultSet rs = connection.executeQuery(Query.EXIST_CHECK.get(tableName), uuid.toString());
             if (rs.next()) return true;
+            else {
+                String name = CommonUtility.getImplementation().getOfflinePlayerName(uuid);
+                if (name != null)
+                    return existsByName(name);
+            }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }

@@ -11,10 +11,7 @@ import org.bukkit.event.HandlerList;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
-import space.devport.wertik.playtime.ConnectionInfo;
-import space.devport.wertik.playtime.ConnectionManager;
-import space.devport.wertik.playtime.ServerConnection;
-import space.devport.wertik.playtime.TaskChainFactoryHolder;
+import space.devport.wertik.playtime.*;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
 import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
@@ -49,6 +46,7 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onPluginEnable() {
         AbstractConsoleOutput.setImplementation(new SpigotConsoleOutput(consoleOutput));
         TaskChainFactoryHolder.setTaskChainFactory(BukkitTaskChainFactory.create(this));
+        CommonUtility.setImplementation(new SpigotCommonUtility());
 
         loadOptions();
 
@@ -119,10 +117,12 @@ public class PlayTimePlugin extends DevportPlugin {
 
             if (connectionInfo == null) return;
 
+            connectionInfo.setReadOnly(true);
+
             globalUserManager.initializeStorage(serverName,
                     connectionInfo,
                     section.getString(serverName + ".table", serverName),
-                    configuration.getFileConfiguration().getBoolean("network-server", false));
+                    section.getBoolean(serverName + ".network-server", false));
         }
     }
 
