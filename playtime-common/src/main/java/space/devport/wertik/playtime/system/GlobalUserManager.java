@@ -8,11 +8,10 @@ import space.devport.wertik.playtime.ServerConnection;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.struct.GlobalUser;
+import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RequiredArgsConstructor
 public class GlobalUserManager {
@@ -20,13 +19,16 @@ public class GlobalUserManager {
     //TODO Cache is useless right now, make it not.
     private final Map<UUID, GlobalUser> loadedUsers = new HashMap<>();
 
-    private final Map<String, MySQLStorage> storages = new HashMap<>();
+    //TODO Mark the connection instead.
+    private final Set<String> networkServers = new HashSet<>();
+
+    private final Map<String, MySQLStorage> remoteStorages = new HashMap<>();
 
     /**
      * @param serverName Name of the server and the table to connect to.
      */
-    public boolean initializeStorage(String serverName, ConnectionInfo connectionInfo, String tableName) {
-        if (this.storages.containsKey(serverName)) return false;
+    public boolean initializeStorage(String serverName, ConnectionInfo connectionInfo, String tableName, boolean... networkServer) {
+        if (this.remoteStorages.containsKey(serverName)) return false;
 
         ServerConnection connection = ConnectionManager.getInstance().initializeConnection(serverName, connectionInfo);
 
@@ -35,8 +37,14 @@ public class GlobalUserManager {
             return false;
         } else {
             MySQLStorage storage = new MySQLStorage(connection, tableName);
-            this.storages.put(serverName, storage);
+            this.remoteStorages.put(serverName, storage);
             AbstractConsoleOutput.getImplementation().info("Initialized remote storage for server " + serverName + " with table " + tableName);
+
+            if (networkServer.length > 0 && networkServer[0]) {
+                this.networkServers.add(serverName);
+                AbstractConsoleOutput.getImplementation().info("Marking it as a network server.");
+            }
+
             return true;
         }
     }
@@ -60,10 +68,10 @@ public class GlobalUserManager {
     public GlobalUser fetchGlobalUser(UUID uniqueID) {
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
-        for (Map.Entry<String, MySQLStorage> entry : storages.entrySet()) {
+        for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
             User remoteUser = entry.getValue().loadUser(uniqueID);
             if (remoteUser == null) continue;
-            user.updateRecord(entry.getKey(), remoteUser);
+            user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
         }
 
         AbstractConsoleOutput.getImplementation().debug("Updated global user " + user.getUniqueID());
@@ -77,5 +85,9 @@ public class GlobalUserManager {
 
     public void unload(UUID uniqueID) {
         this.loadedUsers.remove(uniqueID);
+    }
+
+    private boolean isNetworkServer(String serverName) {
+        return this.networkServers.contains(serverName);
     }
 }

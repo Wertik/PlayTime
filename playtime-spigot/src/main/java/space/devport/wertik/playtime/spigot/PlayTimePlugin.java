@@ -28,6 +28,7 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.storage.struct.StorageType;
+import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 
@@ -52,6 +53,7 @@ public class PlayTimePlugin extends DevportPlugin {
         loadOptions();
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
+        DataManager.getInstance().setLocalUserManager(this.localUserManager);
         this.localUserManager.loadAll(Bukkit.getOnlinePlayers().stream()
                 .map(Player::getUniqueId)
                 .collect(Collectors.toSet()));
@@ -107,14 +109,20 @@ public class PlayTimePlugin extends DevportPlugin {
 
         consoleOutput.info("Starting remote connections and cache...");
         this.globalUserManager = new GlobalUserManager();
+        DataManager.getInstance().setGlobalUserManager(this.globalUserManager);
 
         ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection("servers");
         if (section == null) return;
 
         for (String serverName : section.getKeys(false)) {
             ConnectionInfo connectionInfo = loadInfo("servers." + serverName);
+
             if (connectionInfo == null) return;
-            globalUserManager.initializeStorage(serverName, connectionInfo, section.getString(serverName + ".table", serverName));
+
+            globalUserManager.initializeStorage(serverName,
+                    connectionInfo,
+                    section.getString(serverName + ".table", serverName),
+                    configuration.getFileConfiguration().getBoolean("network-server", false));
         }
     }
 
