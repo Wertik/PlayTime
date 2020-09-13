@@ -2,14 +2,13 @@ package space.devport.wertik.playtime.storage.mysql;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang.NotImplementedException;
-import org.bukkit.Bukkit;
-import space.devport.wertik.playtime.utils.CommonUtility;
-import space.devport.wertik.playtime.mysql.struct.ServerConnection;
+import space.devport.wertik.playtime.NotImplementedException;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.CommonLogger;
+import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
+import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -102,7 +101,7 @@ public class MySQLStorage implements IUserStorage {
 
     @Override
     public void saveUser(User user) {
-        String lastKnownName = Bukkit.getOfflinePlayer(user.getUniqueID()).getName();
+        String lastKnownName = CommonUtility.getImplementation().getOfflinePlayerName(user.getUniqueID());
 
         boolean exists = exists(user.getUniqueID());
 

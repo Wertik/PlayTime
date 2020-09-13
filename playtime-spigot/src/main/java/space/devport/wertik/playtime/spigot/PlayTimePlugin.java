@@ -59,6 +59,8 @@ public class PlayTimePlugin extends DevportPlugin {
                 .map(Player::getUniqueId)
                 .collect(Collectors.toSet()));
 
+        this.globalUserManager = new GlobalUserManager();
+
         initializeRemotes();
 
         new PlayTimeLanguage(this);
@@ -110,7 +112,6 @@ public class PlayTimePlugin extends DevportPlugin {
         if (!configuration.getFileConfiguration().getBoolean("use-remotes", false)) return;
 
         consoleOutput.info("Starting remote connections and cache...");
-        this.globalUserManager = new GlobalUserManager();
 
         ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection("servers");
         if (section == null) return;

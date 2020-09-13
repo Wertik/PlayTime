@@ -71,7 +71,11 @@ public class BungeePlayTimePlugin extends Plugin {
         loadOptions();
 
         this.localUserManager = new BungeeLocalUserManager(this, initializeStorage(false));
-        this.localUserManager.loadAll(ProxyServer.getInstance().getPlayers().stream().map(ProxiedPlayer::getUniqueId).collect(Collectors.toSet()));
+        this.localUserManager.loadAll(ProxyServer.getInstance().getPlayers().stream()
+                .map(ProxiedPlayer::getUniqueId)
+                .collect(Collectors.toSet()));
+
+        this.globalUserManager = new GlobalUserManager();
 
         initializeRemotes();
 
@@ -106,9 +110,9 @@ public class BungeePlayTimePlugin extends Plugin {
         Configuration section = configuration.getSection(path);
         if (section == null) return null;
 
-        return new ConnectionInfo(section.getString("host"),
+        return new ConnectionInfo(section.getString("host", "localhost"),
                 section.getInt("port", 3306),
-                section.getString("username"),
+                section.getString("username", "root"),
                 section.getString("password"),
                 section.getString("database"));
     }
@@ -117,7 +121,6 @@ public class BungeePlayTimePlugin extends Plugin {
         if (!configuration.getBoolean("import-connected-servers", false)) return;
 
         consoleOutput.info("Starting remote connections and cache...");
-        this.globalUserManager = new GlobalUserManager();
 
         Configuration section = configuration.getSection("servers");
         if (section == null) return;
@@ -162,9 +165,10 @@ public class BungeePlayTimePlugin extends Plugin {
 
     public void loadConfig() {
 
-        File file = new File(getDataFolder(), "config.yml");
+        File file = new File(getDataFolder() + "/config.yml");
 
         if (!file.exists()) {
+            file.getParentFile().mkdirs();
             if (!copy(file, "bungeeconfig.yml"))
                 consoleOutput.err("Could not create config.yml");
             else
@@ -181,7 +185,6 @@ public class BungeePlayTimePlugin extends Plugin {
     }
 
     public void saveConfig() {
-
         File file = new File(getDataFolder(), "config.yml");
 
         try {

@@ -24,7 +24,7 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
 
-        if (DataManager.getInstance().getGlobalUserManager().getRemoteStorages().isEmpty()) {
+        if (DataManager.getInstance().getGlobalUserManager() == null || DataManager.getInstance().getGlobalUserManager().getRemoteStorages().isEmpty()) {
             language.sendPrefixed(sender, "Commands.Global-Check.No-Servers");
             return CommandResult.FAILURE;
         }
@@ -46,10 +46,9 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
         Message lineFormat = language.get("Commands.Global-Check.Line");
 
         for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
-            message.append(lineFormat
+            message.append(lineFormat.toString()
                     .replace("%serverName%", serverInfo.getName())
-                    .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat()))
-                    .toString());
+                    .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
         }
 
         message.send(sender);

@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Holds played time on other servers.
@@ -31,7 +30,7 @@ public class GlobalUser {
     }
 
     public long totalTime() {
-        return userRecord.values().stream().collect(Collectors.summarizingLong(User::getPlayedTimeRaw)).getSum();
+        return this.userRecord.values().stream().mapToLong(User::getPlayedTimeRaw).sum();
     }
 
     public void updateRecord(ServerInfo info, User user) {

@@ -2,7 +2,7 @@ package space.devport.wertik.playtime.storage.json;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.lang.NotImplementedException;
+import space.devport.wertik.playtime.NotImplementedException;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 

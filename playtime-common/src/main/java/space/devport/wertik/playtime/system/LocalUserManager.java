@@ -75,6 +75,7 @@ public class LocalUserManager {
         if (checkOnline(uniqueID)) user.setOnline();
 
         this.loadedUsers.put(uniqueID, user);
+        this.storage.saveUser(user);
         CommonLogger.getImplementation().debug("Created user " + uniqueID);
         return user;
     }

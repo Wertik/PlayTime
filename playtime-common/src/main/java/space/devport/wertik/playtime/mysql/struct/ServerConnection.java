@@ -52,6 +52,16 @@ public class ServerConnection {
             throw new IllegalStateException(e);
         }
 
+        Connection connection;
+        try {
+            connection = hikari.getConnection();
+        } catch (SQLException exception) {
+            throw new IllegalStateException(exception);
+        }
+
+        if (connection == null)
+            throw new IllegalStateException("No connection");
+
         this.connected = true;
     }
 

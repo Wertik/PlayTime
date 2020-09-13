@@ -32,7 +32,8 @@ public class BungeeLocalUserManager extends LocalUserManager {
     @Override
     public User loadUser(UUID uniqueID) {
         User user = super.loadUser(uniqueID);
-        update(user);
+        if (user != null)
+            update(user);
         return user;
     }
 

@@ -75,6 +75,9 @@ public class GlobalUserManager {
      */
     @NotNull
     public GlobalUser updateGlobalUser(UUID uniqueID) {
+
+        if (checkEmpty()) return new GlobalUser(uniqueID);
+
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
         for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
@@ -85,6 +88,10 @@ public class GlobalUserManager {
 
         CommonLogger.getImplementation().debug("Updated global user " + user.getUniqueID());
         return user;
+    }
+
+    private boolean checkEmpty() {
+        return remoteStorages.isEmpty();
     }
 
     public void unloadGlobalUser(UUID uniqueID) {
