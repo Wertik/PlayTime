@@ -18,10 +18,6 @@ public class BungeePlayTimeCommand extends Command {
         this.plugin = plugin;
     }
 
-    /*
-     * TODO: Beatify commands, use language.yml
-     * */
-
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {

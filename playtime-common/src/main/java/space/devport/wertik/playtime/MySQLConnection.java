@@ -1,8 +1,6 @@
 package space.devport.wertik.playtime;
 
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.Getter;
-import lombok.Setter;
 import space.devport.wertik.playtime.console.AbstractConsoleOutput;
 
 import javax.sql.rowset.CachedRowSet;
@@ -12,63 +10,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class MySQLConnection {
+public class MySQLConnection extends ConnectionInfo {
 
-    private HikariDataSource hikari;
-
-    @Getter
-    @Setter
-    private String host;
-    @Getter
-    @Setter
-    private int port;
-
-    @Getter
-    @Setter
-    private String user;
-    @Getter
-    @Setter
-    private String password;
-
-    @Getter
-    @Setter
-    private String databaseName;
-
-    @Getter
-    @Setter
-    private int poolSize;
-
-    public MySQLConnection(String host, int port, String user, String password, String databaseName, int poolSize) {
-        this.host = host;
-        this.port = port;
-        this.user = user;
-        this.password = password;
-        this.databaseName = databaseName;
-        this.poolSize = poolSize;
-    }
-
-    public void connect() {
-
-        if (host == null) {
-            throw new IllegalStateException("MySQL Connection not configured. Cannot continue.");
-        }
-
-        hikari = new HikariDataSource();
-        hikari.setMaximumPoolSize(poolSize);
-
-        hikari.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-
-        hikari.addDataSourceProperty("serverName", host);
-        hikari.addDataSourceProperty("port", port);
-        hikari.addDataSourceProperty("databaseName", databaseName);
-
-        hikari.addDataSourceProperty("user", user);
-        hikari.addDataSourceProperty("password", password);
-
-        hikari.addDataSourceProperty("characterEncoding", "utf8");
-        hikari.addDataSourceProperty("useUnicode", "true");
-
-        hikari.validate();
+    public MySQLConnection(String host, int port, String username, String password, String database) {
+        super(host, port, username, password, database);
     }
 
     public void execute(String query, Object... parameters) {

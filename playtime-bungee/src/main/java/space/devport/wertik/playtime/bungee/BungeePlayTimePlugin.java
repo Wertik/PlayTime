@@ -124,7 +124,7 @@ public class BungeePlayTimePlugin extends Plugin {
         File file = new File(getDataFolder(), "config.yml");
 
         if (!file.exists()) {
-            if (!copy(file, "config.yml"))
+            if (!copy(file, "bungeeconfig.yml"))
                 consoleOutput.err("Could not create config.yml");
             else
                 consoleOutput.debug("Created new config.yml");
