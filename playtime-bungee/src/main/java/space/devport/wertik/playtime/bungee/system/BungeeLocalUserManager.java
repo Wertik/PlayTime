@@ -24,14 +24,28 @@ public class BungeeLocalUserManager extends LocalUserManager {
     @Override
     public User createUser(UUID uniqueID) {
         User user = super.createUser(uniqueID);
+        update(user);
+        return user;
+    }
+
+    @Override
+    public User loadUser(UUID uniqueID) {
+        User user = super.loadUser(uniqueID);
+        update(user);
+        return user;
+    }
+
+    /**
+     * Check if time stored is above or same with sum of all connected servers.
+     */
+    private void update(User user) {
+        if (!plugin.getConfiguration().getBoolean("import-connected-servers", false)) return;
 
         // Import server-wide times
-        GlobalUser globalUser = DataManager.getInstance().getGlobalUserManager().getGlobalUser(uniqueID);
+        GlobalUser globalUser = DataManager.getInstance().getGlobalUserManager().getGlobalUser(user.getUniqueID());
         long total = globalUser.totalTime();
 
         if (user.getPlayedTime() < total)
             user.setPlayedTime(total);
-
-        return user;
     }
 }
