@@ -10,6 +10,7 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -92,5 +93,9 @@ public class GlobalUserManager {
 
     private boolean isNetworkServer(String serverName) {
         return this.remoteStorages.containsKey(serverName) && this.remoteStorages.get(serverName).isNetworkServer();
+    }
+
+    public Map<String, MySQLStorage> getRemoteStorages() {
+        return Collections.unmodifiableMap(this.remoteStorages);
     }
 }

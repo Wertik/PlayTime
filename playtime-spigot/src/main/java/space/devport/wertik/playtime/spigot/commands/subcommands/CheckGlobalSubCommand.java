@@ -8,11 +8,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
-import space.devport.utils.text.StringUtil;
+import space.devport.utils.text.message.Message;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
+import space.devport.wertik.playtime.system.DataManager;
 
 public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
@@ -22,6 +23,11 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
+
+        if (DataManager.getInstance().getGlobalUserManager().getRemoteStorages().isEmpty()) {
+            language.sendPrefixed(sender, "Commands.Global-Check.No-Servers");
+            return CommandResult.FAILURE;
+        }
 
         OfflinePlayer target;
         if (args.length > 0) {
@@ -34,13 +40,19 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
             target = (Player) sender;
         }
 
-        //TODO Beautify
         GlobalUser globalUser = getPlugin().getGlobalUserManager().getGlobalUser(target.getUniqueId());
-        sender.sendMessage("Global user " + globalUser.getUniqueID() + ", name: " + Bukkit.getOfflinePlayer(globalUser.getUniqueID()).getName());
+
+        Message message = language.get("Commands.Global-Check.Header");
+        Message lineFormat = language.get("Commands.Global-Check.Line");
+
         for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
-            sender.sendMessage(StringUtil.color("Time on " + serverInfo.getName() + " = " + DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
+            message.append(lineFormat
+                    .replace("%serverName%", serverInfo.getName())
+                    .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat()))
+                    .toString());
         }
-        sender.sendMessage("Simplistic implementation.");
+
+        message.send(sender);
         return CommandResult.SUCCESS;
     }
 
@@ -51,7 +63,7 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
     @Override
     public @NotNull String getDefaultDescription() {
-        return "Check the play time of a player on a specified server.";
+        return "Check the play time of a player on all connected remote servers.";
     }
 
     @Override

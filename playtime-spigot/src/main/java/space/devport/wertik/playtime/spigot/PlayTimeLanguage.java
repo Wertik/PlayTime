@@ -19,5 +19,9 @@ public class PlayTimeLanguage extends LanguageDefaults {
         addDefault("Commands.Reset.Import-Warning", "&7Player has been reset, but '&fimport-statistics&7' is enabled. Time will be imported.");
         addDefault("Commands.Reset.Done", "&7Played time reset.");
         addDefault("Commands.Reset.Done-Others", "&7Played time reset for &f%player%");
+
+        addDefault("Commands.Global-Check.No-Servers", "&cThere are no remote servers connected.");
+        addDefault("Commands.Global-Check.Header", "&8&m    &3 Global Play Times");
+        addDefault("Commands.Global-Check.Line", "&8 - &f%serverName% &8= &r%time%");
     }
 }
