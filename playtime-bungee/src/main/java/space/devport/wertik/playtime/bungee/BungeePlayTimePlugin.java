@@ -18,7 +18,6 @@ import space.devport.wertik.playtime.bungee.listeners.BungeePlayerListener;
 import space.devport.wertik.playtime.bungee.system.BungeeLocalUserManager;
 import space.devport.wertik.playtime.bungee.taskchain.BungeeTaskChainFactory;
 import space.devport.wertik.playtime.bungee.utils.BungeeCommonUtility;
-import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.mysql.ConnectionManager;
 import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
 import space.devport.wertik.playtime.mysql.struct.ServerConnection;
@@ -26,6 +25,7 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.storage.struct.StorageType;
+import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 
 import java.io.File;
@@ -39,11 +39,11 @@ public class BungeePlayTimePlugin extends Plugin {
     @Getter
     private static BungeePlayTimePlugin instance;
 
-    /**
-     * Bungee only caches local user data as there's no output for global scope.
-     */
     @Getter
     private LocalUserManager localUserManager;
+
+    @Getter
+    private GlobalUserManager globalUserManager;
 
     @Getter
     private BungeeLogger consoleOutput;
@@ -70,8 +70,10 @@ public class BungeePlayTimePlugin extends Plugin {
         loadConfig();
         loadOptions();
 
-        this.localUserManager = new BungeeLocalUserManager(this, initiateStorage());
+        this.localUserManager = new BungeeLocalUserManager(this, initializeStorage(false));
         this.localUserManager.loadAll(ProxyServer.getInstance().getPlayers().stream().map(ProxiedPlayer::getUniqueId).collect(Collectors.toSet()));
+
+        initializeRemotes();
 
         getProxy().getPluginManager().registerListener(this, new BungeePlayerListener(this));
 
@@ -111,11 +113,34 @@ public class BungeePlayTimePlugin extends Plugin {
                 section.getString("database"));
     }
 
-    @NotNull
-    private IUserStorage initiateStorage() {
-        StorageType storageType = StorageType.fromString(configuration.getString("storage.type", "json"));
+    private void initializeRemotes() {
+        if (!configuration.getBoolean("import-connected-servers", false)) return;
 
-        IUserStorage userStorage = null;
+        consoleOutput.info("Starting remote connections and cache...");
+        this.globalUserManager = new GlobalUserManager();
+
+        Configuration section = configuration.getSection("servers");
+        if (section == null) return;
+
+        for (String serverName : section.getKeys()) {
+            ConnectionInfo connectionInfo = loadInfo("servers." + serverName);
+
+            if (connectionInfo == null) return;
+
+            connectionInfo.setReadOnly(true);
+
+            globalUserManager.initializeStorage(serverName,
+                    connectionInfo,
+                    section.getString(serverName + ".table", serverName),
+                    section.getBoolean(serverName + ".network-server", false));
+        }
+    }
+
+    @NotNull
+    private IUserStorage initializeStorage(boolean forceDefault) {
+        StorageType storageType = forceDefault ? StorageType.JSON : StorageType.fromString(configuration.getString("storage.type", "json"));
+
+        IUserStorage userStorage;
         switch (storageType) {
             default:
             case JSON:
@@ -127,12 +152,8 @@ public class BungeePlayTimePlugin extends Plugin {
 
                 if (serverConnection != null)
                     userStorage = new MySQLStorage(serverConnection, configuration.getString("storage.mysql.table", "play-time"));
+                else return initializeStorage(true);
                 break;
-        }
-
-        if (userStorage == null) {
-            CommonLogger.getImplementation().err("Could not create a local storage. Cannot function properly.");
-            return null;
         }
 
         userStorage.initialize();

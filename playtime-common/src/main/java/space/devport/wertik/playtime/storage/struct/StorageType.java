@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public enum StorageType {
+
     JSON, MYSQL;
 
     public static StorageType DEFAULT_STORAGE_TYPE = StorageType.JSON;
