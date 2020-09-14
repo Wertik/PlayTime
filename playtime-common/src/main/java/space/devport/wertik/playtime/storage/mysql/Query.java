@@ -25,7 +25,7 @@ enum Query {
 
     GET_USER_BY_NAME("SELECT `time`, `uuid` FROM `%table%` WHERE `lastKnownName` = ?"),
 
-    GET_TOP_TEN("SELECT * FROM `%table%` ORDER BY `time` DESC LIMIT %count%");
+    GET_TOP("SELECT * FROM `%table%` ORDER BY `time` DESC LIMIT %count%");
 
     @Getter
     private final String statement;

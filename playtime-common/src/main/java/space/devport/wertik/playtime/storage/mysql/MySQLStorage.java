@@ -57,7 +57,7 @@ public class MySQLStorage implements IUserStorage {
     @Override
     public CompletableFuture<List<User>> getTop(int count) {
         return CompletableFuture.supplyAsync(() -> {
-            ResultSet resultSet = connection.executeQuery(Query.GET_TOP_TEN.get(tableName).replace("%count%", String.valueOf(count)));
+            ResultSet resultSet = connection.executeQuery(Query.GET_TOP.get(tableName).replace("%count%", String.valueOf(count)));
 
             List<User> top = new LinkedList<>();
             try {
