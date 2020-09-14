@@ -61,7 +61,7 @@ public class ResetSubCommand extends PlayTimeSubCommand {
 
     @Override
     public @NotNull String getDefaultDescription() {
-        return "Reload the plugin.";
+        return "Reset all times, or for a player.";
     }
 
     @Override
