@@ -8,7 +8,8 @@ import space.devport.wertik.playtime.struct.User;
 
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 public class JsonStorage implements IUserStorage {
 
@@ -17,7 +18,7 @@ public class JsonStorage implements IUserStorage {
             .create();
 
     @Override
-    public User loadUser(String name) {
+    public void purge(Predicate<User> conditions) {
         throw new NotImplementedException();
     }
 
@@ -27,7 +28,12 @@ public class JsonStorage implements IUserStorage {
     }
 
     @Override
-    public User loadUser(UUID uniqueID) {
+    public CompletableFuture<User> loadUser(UUID uniqueID) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public CompletableFuture<User> loadUser(String name) {
         throw new NotImplementedException();
     }
 
@@ -43,11 +49,6 @@ public class JsonStorage implements IUserStorage {
 
     @Override
     public void purge() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void purge(Function<User, Boolean> conditions) {
         throw new NotImplementedException();
     }
 

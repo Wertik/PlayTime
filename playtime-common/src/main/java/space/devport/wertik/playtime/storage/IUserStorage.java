@@ -2,18 +2,18 @@ package space.devport.wertik.playtime.storage;
 
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 public interface IUserStorage {
 
     void initialize();
 
-    User loadUser(UUID uniqueID);
+    CompletableFuture<User> loadUser(UUID uniqueID);
 
-    User loadUser(String name);
+    CompletableFuture<User> loadUser(String name);
 
     Set<User> loadAll();
 
@@ -29,5 +29,5 @@ public interface IUserStorage {
     /**
      * Purge entries based on a condition.
      */
-    void purge(Function<User, Boolean> conditions);
+    void purge(Predicate<User> conditions);
 }

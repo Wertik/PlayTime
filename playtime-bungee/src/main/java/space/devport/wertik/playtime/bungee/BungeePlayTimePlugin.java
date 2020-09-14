@@ -9,13 +9,10 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
-import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.bungee.commands.BungeePlayTimeCommand;
 import space.devport.wertik.playtime.bungee.console.BungeeLogger;
-import space.devport.wertik.playtime.bungee.events.BungeePlayTimeDisableEvent;
 import space.devport.wertik.playtime.bungee.listeners.BungeePlayerListener;
 import space.devport.wertik.playtime.bungee.system.BungeeLocalUserManager;
-import space.devport.wertik.playtime.bungee.taskchain.BungeeTaskChainFactory;
 import space.devport.wertik.playtime.bungee.utils.BungeeCommonUtility;
 import space.devport.wertik.playtime.bungee.utils.BungeeStringUtil;
 import space.devport.wertik.playtime.mysql.ConnectionManager;
@@ -63,8 +60,6 @@ public class BungeePlayTimePlugin extends Plugin {
         this.consoleOutput = new BungeeLogger(this);
         new BungeeCommonUtility(this);
 
-        TaskChainFactoryHolder.setTaskChainFactory(BungeeTaskChainFactory.create(this));
-
         configurationProvider = ConfigurationProvider.getProvider(YamlConfiguration.class);
 
         loadConfig();
@@ -88,7 +83,6 @@ public class BungeePlayTimePlugin extends Plugin {
     public void onDisable() {
         this.localUserManager.saveAll();
 
-        getProxy().getPluginManager().callEvent(new BungeePlayTimeDisableEvent());
         ConnectionManager.getInstance().closeConnections();
     }
 

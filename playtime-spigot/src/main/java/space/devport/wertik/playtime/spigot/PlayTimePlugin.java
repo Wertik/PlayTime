@@ -1,6 +1,5 @@
 package space.devport.wertik.playtime.spigot;
 
-import co.aikar.taskchain.BukkitTaskChainFactory;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -11,7 +10,6 @@ import org.bukkit.event.HandlerList;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
-import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.mysql.ConnectionManager;
 import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
@@ -49,7 +47,6 @@ public class PlayTimePlugin extends DevportPlugin {
     @Override
     public void onPluginEnable() {
         CommonLogger.setImplementation(new SpigotLogger(consoleOutput));
-        TaskChainFactoryHolder.setTaskChainFactory(BukkitTaskChainFactory.create(this));
         CommonUtility.setImplementation(new SpigotCommonUtility());
 
         loadOptions();

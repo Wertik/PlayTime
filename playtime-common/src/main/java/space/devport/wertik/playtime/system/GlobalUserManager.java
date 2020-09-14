@@ -83,7 +83,7 @@ public class GlobalUserManager {
         GlobalUser user = null;
 
         for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
-            User remoteUser = entry.getValue().loadUser(name);
+            User remoteUser = entry.getValue().loadUser(name).join();
 
             if (remoteUser == null) continue;
 
@@ -112,7 +112,7 @@ public class GlobalUserManager {
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
         for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
-            User remoteUser = entry.getValue().loadUser(uniqueID);
+            User remoteUser = entry.getValue().loadUser(uniqueID).join();
             if (remoteUser == null) continue;
             user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
         }

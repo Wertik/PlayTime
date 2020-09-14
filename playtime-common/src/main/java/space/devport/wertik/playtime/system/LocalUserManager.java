@@ -116,7 +116,7 @@ public class LocalUserManager {
      * Load a User from storage and cache him.
      */
     public User loadUser(UUID uniqueID) {
-        User user = storage.loadUser(uniqueID);
+        User user = storage.loadUser(uniqueID).join();
 
         if (user != null) {
             if (checkOnline(uniqueID)) user.setOnline();
@@ -129,7 +129,7 @@ public class LocalUserManager {
 
     @Nullable
     public User loadUser(String name) {
-        User user = storage.loadUser(name);
+        User user = storage.loadUser(name).join();
 
         if (user != null) {
             UUID uniqueID = user.getUniqueID();

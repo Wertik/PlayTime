@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.NotImplementedException;
-import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.storage.IUserStorage;
@@ -17,7 +16,9 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.function.Predicate;
 
 public class MySQLStorage implements IUserStorage {
 
@@ -44,38 +45,43 @@ public class MySQLStorage implements IUserStorage {
 
     @Override
     public void initialize() {
-        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.CREATE_TABLE.get(tableName))).execute((exception, task) -> {
-            if (exception != null) exception.printStackTrace();
-            CommonLogger.getImplementation().debug("MySQL storage initialized.");
-        });
+        CompletableFuture.runAsync(() -> connection.execute(Query.CREATE_TABLE.get(tableName)))
+                .thenRun(() -> CommonLogger.getImplementation().debug("MySQL storage initialized."))
+                .exceptionally((exc) -> {
+                    exc.printStackTrace();
+                    return null;
+                });
     }
 
     @Override
-    public User loadUser(String name) {
+    public CompletableFuture<User> loadUser(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            ResultSet resultSet = connection.executeQuery(Query.GET_USER_BY_NAME.get(tableName), name);
 
-        ResultSet resultSet = connection.executeQuery(Query.GET_USER_BY_NAME.get(tableName), name);
-
-        long time = 0;
-        UUID uniqueID = null;
-
-        try {
-            if (resultSet != null && resultSet.next()) {
-                time = resultSet.getLong("time");
-                uniqueID = convertUUID(resultSet.getString("uuid"));
+            long time = 0;
+            UUID uniqueID = null;
+            try {
+                if (resultSet.next()) {
+                    time = resultSet.getLong("time");
+                    uniqueID = convertUUID(resultSet.getString("uuid"));
+                }
+            } catch (SQLException e) {
+                throw new CompletionException(e);
             }
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
 
-        if (uniqueID == null) {
-            CommonLogger.getImplementation().debug("Could not load user " + name + " from storage.");
+            if (uniqueID == null) {
+                CommonLogger.getImplementation().debug("There is no user with the name " + name + " saved.");
+                return null;
+            }
+
+            User user = new User(uniqueID);
+            user.setLastKnownName(name);
+            user.setPlayedTime(time);
+            return user;
+        }).exceptionally((exc) -> {
+            exc.printStackTrace();
             return null;
-        }
-
-        User user = new User(uniqueID);
-        user.setPlayedTime(time);
-
-        return user;
+        });
     }
 
     @Nullable
@@ -90,31 +96,28 @@ public class MySQLStorage implements IUserStorage {
     }
 
     @Override
-    public User loadUser(UUID uniqueID) {
-        User user = new User(uniqueID);
+    public CompletableFuture<User> loadUser(UUID uniqueID) {
+        return CompletableFuture.supplyAsync(() -> {
+            ResultSet resultSet = connection.executeQuery(Query.GET_USER.get(tableName), uniqueID.toString());
 
-        long time = 0;
+            User user = new User(uniqueID);
+            try {
+                if (resultSet.next()) {
+                    long time = resultSet.getLong("time");
+                    String name = resultSet.getString("lastKnownName");
 
-        ResultSet resultSet = connection.executeQuery(Query.GET_USER.get(tableName), uniqueID.toString());
-
-        try {
-            if (resultSet == null || !resultSet.next()) {
-                // Name fallback
-                String name = CommonUtility.getImplementation().getOfflinePlayerName(uniqueID);
-                return loadUser(name);
-            } else {
-                time = resultSet.getLong("time");
-
-                String name = resultSet.getString("lastKnownName");
-                user.setLastKnownName(name);
+                    user.setLastKnownName(name);
+                    user.setPlayedTime(time);
+                } else return null;
+            } catch (SQLException e) {
+                throw new CompletionException(e);
             }
-        } catch (SQLException exception) {
-            if (CommonLogger.getImplementation().isDebug())
-                exception.printStackTrace();
-        }
-
-        user.setPlayedTime(time);
-        return user;
+            return user;
+        }).exceptionally((exc) -> {
+            // Name fallback
+            String name = CommonUtility.getImplementation().getOfflinePlayerName(uniqueID);
+            return loadUser(name).join();
+        });
     }
 
     @Override
@@ -130,41 +133,44 @@ public class MySQLStorage implements IUserStorage {
         boolean exists = exists(user.getUniqueID());
 
         if (exists)
-            TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.UPDATE_USER.get(tableName),
+            CompletableFuture.runAsync(() -> connection.execute(Query.UPDATE_USER.get(tableName),
                     user.getUniqueID().toString(),
                     lastKnownName,
-                    user.getPlayedTime()))
-                    .execute((exception, task) -> {
-                        if (exception != null) exception.printStackTrace();
-                    });
+                    user.getPlayedTime())).exceptionally((exc) -> {
+                exc.printStackTrace();
+                return null;
+            });
         else
-            TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.INSERT_USER.get(tableName),
+            CompletableFuture.runAsync(() -> connection.execute(Query.INSERT_USER.get(tableName),
                     user.getUniqueID().toString(),
                     lastKnownName,
                     user.getPlayedTime()))
-                    .execute((exception, task) -> {
-                        if (exception != null) exception.printStackTrace();
+                    .exceptionally((exc) -> {
+                        exc.printStackTrace();
+                        return null;
                     });
     }
 
     @Override
     public void deleteUser(User user) {
-        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.DELETE_USER.get(tableName), user.getUniqueID().toString()))
-                .execute((exception, task) -> {
-                    if (exception != null) exception.printStackTrace();
+        CompletableFuture.runAsync(() -> connection.execute(Query.DELETE_USER.get(tableName), user.getUniqueID().toString()))
+                .exceptionally((exc) -> {
+                    exc.printStackTrace();
+                    return null;
                 });
     }
 
     @Override
     public void purge() {
-        TaskChainFactoryHolder.newChain().async(() -> connection.execute(Query.DROP_TABLE.get(tableName)))
-                .execute((exception, task) -> {
-                    if (exception != null) exception.printStackTrace();
+        CompletableFuture.runAsync(() -> connection.execute(Query.DROP_TABLE.get(tableName)))
+                .exceptionally((exc) -> {
+                    exc.printStackTrace();
+                    return null;
                 });
     }
 
     @Override
-    public void purge(Function<User, Boolean> conditions) {
+    public void purge(Predicate<User> conditions) {
         throw new NotImplementedException();
     }
 
@@ -188,6 +194,7 @@ public class MySQLStorage implements IUserStorage {
     /**
      * Check if the table has this entry.
      */
+    //TODO remove
     public boolean exists(UUID uuid) {
         ResultSet resultSet = connection.executeQuery(Query.EXIST_CHECK.get(tableName), uuid.toString());
 
