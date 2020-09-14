@@ -23,5 +23,9 @@ public class PlayTimeLanguage extends LanguageDefaults {
         addDefault("Commands.Global-Check.No-Servers", "&cThere are no remote servers connected.");
         addDefault("Commands.Global-Check.Header", "&8&m    &3 Global Play Times");
         addDefault("Commands.Global-Check.Line", "&8 - &f%serverName% &8= &r%time%");
+
+        addDefault("Commands.Top.Header", "&8&m    &3 PlayTime Top");
+        addDefault("Commands.Top.Line", "&f%position% &8- &f%name% &8= &r%time%");
+        addDefault("Commands.Top.Failed", "&cFailed to fetch the playtime top.");
     }
 }
