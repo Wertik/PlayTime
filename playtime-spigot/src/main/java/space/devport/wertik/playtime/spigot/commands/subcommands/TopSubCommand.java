@@ -39,6 +39,8 @@ public class TopSubCommand extends PlayTimeSubCommand {
             }
             message.send(sender);
         }).exceptionally((exc) -> {
+            if (getPlugin().getConsoleOutput().isDebug())
+                exc.printStackTrace();
             language.sendPrefixed(sender, "Commands.Top.Failed");
             return null;
         });

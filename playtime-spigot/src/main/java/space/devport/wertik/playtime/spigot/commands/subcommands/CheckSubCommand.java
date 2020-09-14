@@ -1,6 +1,6 @@
 package space.devport.wertik.playtime.spigot.commands.subcommands;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;

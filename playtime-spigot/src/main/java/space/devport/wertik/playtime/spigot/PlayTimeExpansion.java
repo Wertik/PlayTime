@@ -2,7 +2,7 @@ package space.devport.wertik.playtime.spigot;
 
 import lombok.RequiredArgsConstructor;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import space.devport.utils.text.StringUtil;
@@ -117,7 +117,7 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
                 return parseTime(topUser.getPlayedTime(), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
         }
 
-        return parseTime(user.getPlayedTimeRaw(), args[0], args.length > 1 && args[1].equalsIgnoreCase("start"));
+        return parseTime(user.getPlayedTime(), args[0], args.length > 1 && args[1].equalsIgnoreCase("start"));
     }
 
     private int parsePosition(String str) {

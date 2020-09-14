@@ -49,7 +49,8 @@ public class MySQLStorage implements IUserStorage {
         CompletableFuture.runAsync(() -> connection.execute(Query.CREATE_TABLE.get(tableName)))
                 .thenRun(() -> CommonLogger.getImplementation().debug("MySQL storage initialized."))
                 .exceptionally((exc) -> {
-                    exc.printStackTrace();
+                    if (CommonLogger.getImplementation().isDebug())
+                        exc.printStackTrace();
                     return null;
                 });
     }
@@ -101,7 +102,8 @@ public class MySQLStorage implements IUserStorage {
             user.setPlayedTime(time);
             return user;
         }).exceptionally((exc) -> {
-            exc.printStackTrace();
+            if (CommonLogger.getImplementation().isDebug())
+                exc.printStackTrace();
             return null;
         });
     }
@@ -136,6 +138,9 @@ public class MySQLStorage implements IUserStorage {
             }
             return user;
         }).exceptionally((exc) -> {
+            if (CommonLogger.getImplementation().isDebug())
+                exc.printStackTrace();
+
             // Name fallback
             String name = CommonUtility.getImplementation().getPlayerName(uniqueID);
             return loadUser(name).join();
@@ -157,7 +162,8 @@ public class MySQLStorage implements IUserStorage {
                 user.getLastKnownName(),
                 user.getPlayedTime()))
                 .exceptionally((exc) -> {
-                    exc.printStackTrace();
+                    if (CommonLogger.getImplementation().isDebug())
+                        exc.printStackTrace();
                     return null;
                 });
     }
@@ -166,7 +172,8 @@ public class MySQLStorage implements IUserStorage {
     public void deleteUser(User user) {
         CompletableFuture.runAsync(() -> connection.execute(Query.DELETE_USER.get(tableName), user.getUniqueID().toString()))
                 .exceptionally((exc) -> {
-                    exc.printStackTrace();
+                    if (CommonLogger.getImplementation().isDebug())
+                        exc.printStackTrace();
                     return null;
                 });
     }
@@ -175,7 +182,8 @@ public class MySQLStorage implements IUserStorage {
     public void purge() {
         CompletableFuture.runAsync(() -> connection.execute(Query.DROP_TABLE.get(tableName)))
                 .exceptionally((exc) -> {
-                    exc.printStackTrace();
+                    if (CommonLogger.getImplementation().isDebug())
+                        exc.printStackTrace();
                     return null;
                 });
     }
