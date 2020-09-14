@@ -22,14 +22,14 @@ public class BungeePlayTimeCommand extends Command {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(BungeeStringUtil.format("&cSub commands: &fcheck (player)&7, &freload&7, &fglobalcheck (player)"));
+            sender.sendMessage(BungeeStringUtil.format("&cSub commands: &fcheck (player)&7, &freload (hard)&7, &fglobalcheck (player)"));
             return;
         }
 
         ProxiedPlayer player;
         switch (args[0].toLowerCase()) {
             case "reload":
-                plugin.reload(sender);
+                plugin.reload(sender, args.length > 1 && args[1].equalsIgnoreCase("hard"));
                 break;
             case "check":
                 User user;

@@ -86,11 +86,29 @@ public class BungeePlayTimePlugin extends Plugin {
         ConnectionManager.getInstance().closeConnections();
     }
 
-    public void reload(CommandSender sender) {
+    public void reload(CommandSender sender, boolean hard) {
         long start = System.currentTimeMillis();
+
+        if (hard) {
+            consoleOutput.info("Saving all data...");
+            this.localUserManager.saveAll();
+
+            consoleOutput.info("Closing connections...");
+            ConnectionManager.getInstance().closeConnections();
+
+            consoleOutput.info("Initiating normal reload...");
+        }
 
         loadConfig();
         loadOptions();
+
+        if (hard) {
+            consoleOutput.info("Initializing storages...");
+            this.localUserManager = new BungeeLocalUserManager(this, initializeStorage(false));
+            this.localUserManager.loadOnline();
+
+            initializeRemotes();
+        }
 
         sender.sendMessage(BungeeStringUtil.format("&7Done... reload took &f" + (System.currentTimeMillis() - start) + "&7ms."));
     }
