@@ -37,7 +37,7 @@ public class BungeeTaskChainFactory extends TaskChainFactory {
         return new BungeeTaskChainFactory(plugin, new TaskChainAsyncQueue());
     }
 
-    private static class BungeeGameInterface implements GameInterface {
+    public static class BungeeGameInterface implements GameInterface {
         private final Plugin plugin;
         private final AsyncQueue asyncQueue;
 
