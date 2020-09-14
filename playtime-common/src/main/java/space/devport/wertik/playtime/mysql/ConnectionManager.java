@@ -62,9 +62,10 @@ public class ConnectionManager {
     }
 
     private void closeConnection(String name) {
-        if (!this.connections.containsKey(name) || !this.connections.get(name).isConnected()) return;
+        if (!this.connections.containsKey(name)) return;
 
-        this.connections.get(name).close();
+        if (this.connections.get(name).isConnected())
+            this.connections.get(name).close();
         this.connections.remove(name);
     }
 

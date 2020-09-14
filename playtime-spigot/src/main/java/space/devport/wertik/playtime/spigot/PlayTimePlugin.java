@@ -91,6 +91,7 @@ public class PlayTimePlugin extends DevportPlugin {
     public void hardReload(CommandSender sender) {
         consoleOutput.info("Saving all data...");
         this.localUserManager.saveAll();
+        this.globalUserManager.dumpAll();
 
         consoleOutput.info("Closing connections...");
         ConnectionManager.getInstance().closeConnections();
@@ -102,6 +103,7 @@ public class PlayTimePlugin extends DevportPlugin {
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
         this.localUserManager.loadOnline();
 
+        this.globalUserManager = new GlobalUserManager();
         initializeRemotes();
     }
 

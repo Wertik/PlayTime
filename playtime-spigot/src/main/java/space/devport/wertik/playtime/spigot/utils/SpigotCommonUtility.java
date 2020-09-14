@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class SpigotCommonUtility extends CommonUtility {
 
     @Override
-    public String getOfflinePlayerName(UUID uniqueID) {
+    public String getPlayerName(UUID uniqueID) {
         return Bukkit.getOfflinePlayer(uniqueID).getName();
     }
 

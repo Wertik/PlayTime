@@ -137,7 +137,7 @@ public class MySQLStorage implements IUserStorage {
             return user;
         }).exceptionally((exc) -> {
             // Name fallback
-            String name = CommonUtility.getImplementation().getOfflinePlayerName(uniqueID);
+            String name = CommonUtility.getImplementation().getPlayerName(uniqueID);
             return loadUser(name).join();
         });
     }

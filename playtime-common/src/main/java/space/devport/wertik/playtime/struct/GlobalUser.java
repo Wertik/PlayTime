@@ -3,6 +3,7 @@ package space.devport.wertik.playtime.struct;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.system.DataManager;
+import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,8 +26,9 @@ public class GlobalUser {
 
     public long getPlayedTime(ServerInfo serverInfo) {
         long time = this.userRecord.containsKey(serverInfo) ? this.userRecord.get(serverInfo).getPlayedTimeRaw() : 0;
-        if (serverInfo.isNetworkWide())
+        if (serverInfo.isNetworkWide() && CommonUtility.getImplementation().isOnline(uniqueID)) {
             time += DataManager.getInstance().getLocalUserManager().getOrCreateUser(uniqueID).sinceJoin();
+        }
         return time;
     }
 

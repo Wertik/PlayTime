@@ -10,6 +10,7 @@ import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class LocalUserManager {
 
@@ -46,6 +47,12 @@ public class LocalUserManager {
     public boolean saveUser(UUID uniqueID) {
         User user = this.loadedUsers.getOrDefault(uniqueID, null);
         if (user == null) return false;
+
+        // Attempt to fill out missing names.
+        if (user.getLastKnownName() == null) {
+            user.setLastKnownName(CommonUtility.getImplementation().getPlayerName(uniqueID));
+        }
+
         storage.saveUser(user);
         CommonLogger.getImplementation().debug("Saved user " + uniqueID);
         return true;
@@ -80,7 +87,7 @@ public class LocalUserManager {
 
         if (checkOnline(uniqueID)) {
             user.setOnline();
-            user.setLastKnownName(CommonUtility.getImplementation().getOfflinePlayerName(uniqueID));
+            user.setLastKnownName(CommonUtility.getImplementation().getPlayerName(uniqueID));
         }
 
         this.loadedUsers.put(uniqueID, user);
@@ -145,12 +152,45 @@ public class LocalUserManager {
 
             this.loadedUsers.put(uniqueID, user);
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
+        } else {
+            // Attempt to map username to UUID using remotes.
+            UUID uniqueID = DataManager.getInstance().getGlobalUserManager().mapUsername(name);
+            if (uniqueID != null) {
+                user = loadUser(uniqueID);
+                user.setLastKnownName(name);
+                return user;
+            }
         }
         return user;
     }
 
     public CompletableFuture<List<User>> getTop(int count) {
-        return storage.getTop(count);
+        return storage.getTop(count).thenApplyAsync((top) -> {
+
+            CommonLogger.getImplementation().debug("Top users from db: " + top.stream().map(User::getLastKnownName).collect(Collectors.joining(", ")));
+
+            // Update user from cache if he's loaded.
+            for (User topUser : top) {
+                if (!isLoaded(topUser.getUniqueID()) || !checkOnline(topUser.getUniqueID()))
+                    continue;
+
+                User localUser = getUser(topUser.getUniqueID());
+
+                if (localUser == null) continue;
+
+                if (topUser.getLastKnownName() == null)
+                    topUser.setLastKnownName(localUser.getLastKnownName());
+                if (localUser.getPlayedTime() > topUser.getPlayedTimeRaw())
+                    topUser.setPlayedTime(localUser.getPlayedTime());
+
+                CommonLogger.getImplementation().debug("Updated user " + topUser.getLastKnownName() + " from cache.");
+            }
+
+            // Re-sort
+            return top.stream()
+                    .sorted(Comparator.comparingLong(User::getPlayedTime).reversed())
+                    .collect(Collectors.toList());
+        });
     }
 
     public boolean checkOnline(UUID uniqueID) {

@@ -9,7 +9,7 @@ import java.util.UUID;
 public class DummyCommonUtility extends CommonUtility {
 
     @Override
-    public String getOfflinePlayerName(UUID uniqueID) {
+    public String getPlayerName(UUID uniqueID) {
         return null;
     }
 

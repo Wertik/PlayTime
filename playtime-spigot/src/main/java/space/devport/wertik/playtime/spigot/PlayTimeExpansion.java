@@ -12,6 +12,8 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 public class PlayTimeExpansion extends PlaceholderExpansion {
 
@@ -19,8 +21,10 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
     /*
      * %playtime% -- time spent on server in millis
-     * %playtime_formatted% -- time spent on server formatted
-     * %playtime_global_<server>_formatted/time-element%
+     * %playtime_<formatted/time-element>% -- time spent on server formatted
+     * %playtime_global_<server>_<formatted/time-element>%
+     * %playtime_top_<position>_<name/time-element/formatted>%
+     * %playtime_top_global_<server>_<position>_<name/time-element/formatted>%
      * */
 
     @Override
@@ -66,9 +70,62 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
             }
 
             return parseTime(globalUser.getPlayedTime(new ServerInfo(serverName)), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
+        } else if (args[0].equalsIgnoreCase("top")) {
+
+            if (args[1].equalsIgnoreCase("global")) {
+
+                String serverName = args[2];
+
+                if (!plugin.getGlobalUserManager().getRemoteStorages().containsKey(serverName))
+                    return "invalid_server";
+
+                int position = parsePosition(args[3]);
+
+                if (position == -1) return "invalid_position";
+
+                List<User> top = plugin.getGlobalUserManager().getTop(serverName, position).join();
+
+                if (top.size() < position) return "not_populated";
+
+                User topUser = top.get(position - 1);
+
+                if (args.length == 4)
+                    return String.valueOf(topUser.getPlayedTime());
+
+                if (args[4].equalsIgnoreCase("name"))
+                    return topUser.getLastKnownName();
+                else
+                    return parseTime(topUser.getPlayedTime(), args[4], args.length > 5 && args[5].equalsIgnoreCase("start"));
+            }
+
+            int position = parsePosition(args[1]);
+
+            if (position == -1) return "invalid_position";
+
+            List<User> top = plugin.getLocalUserManager().getTop(position).join();
+
+            if (top.size() < position) return "not_populated";
+
+            User topUser = top.get(position - 1);
+
+            if (args.length == 2)
+                return String.valueOf(topUser.getPlayedTime());
+
+            if (args[2].equalsIgnoreCase("name"))
+                return topUser.getLastKnownName();
+            else
+                return parseTime(topUser.getPlayedTime(), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
         }
 
-        return parseTime(user.getPlayedTimeRaw(), args[0], args.length > 1 && args[0].equalsIgnoreCase("start"));
+        return parseTime(user.getPlayedTimeRaw(), args[0], args.length > 1 && args[1].equalsIgnoreCase("start"));
+    }
+
+    private int parsePosition(String str) {
+        try {
+            return Integer.parseInt(str.trim());
+        } catch (NumberFormatException exception) {
+            return -1;
+        }
     }
 
     private String parseTime(long time, String param, boolean starting) {

@@ -37,6 +37,6 @@ public class ReloadSubCommand extends PlayTimeSubCommand {
 
     @Override
     public @NotNull ArgumentRange getRange() {
-        return new ArgumentRange(0);
+        return new ArgumentRange(0, 1);
     }
 }

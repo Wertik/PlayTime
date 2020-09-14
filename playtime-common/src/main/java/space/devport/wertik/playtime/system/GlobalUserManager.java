@@ -1,6 +1,7 @@
 package space.devport.wertik.playtime.system;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.mysql.ConnectionManager;
 import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
@@ -10,10 +11,9 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class GlobalUserManager {
 
@@ -100,6 +100,15 @@ public class GlobalUserManager {
         return user;
     }
 
+    @Nullable
+    public UUID mapUsername(String name) {
+        return this.loadedUsers.values().stream()
+                .filter(u -> u.getLastKnownName() != null && u.getLastKnownName().equals(name))
+                .map(GlobalUser::getUniqueID)
+                .findAny()
+                .orElse(Optional.ofNullable(loadGlobalUser(name)).map(GlobalUser::getUniqueID).orElse(null));
+    }
+
     /**
      * Update data, if not loaded, create new.
      * Called when a player joins, or the plugin is enabled and he's online.
@@ -119,6 +128,45 @@ public class GlobalUserManager {
 
         CommonLogger.getImplementation().debug("Updated global user " + user.getUniqueID());
         return user;
+    }
+
+    public CompletableFuture<List<User>> getTop(String serverName, int count) {
+
+        MySQLStorage storage = getRemoteStorages().get(serverName);
+
+        if (storage == null) return CompletableFuture.supplyAsync(ArrayList::new);
+
+        return storage.getTop(count).thenApplyAsync((top) -> {
+
+            // Update user from cache if he's loaded.
+            for (User topUser : top) {
+                if (!isLoaded(topUser.getUniqueID()))
+                    continue;
+
+                ServerInfo serverInfo = new ServerInfo(serverName, isNetworkServer(serverName));
+                GlobalUser globalUser = getGlobalUser(topUser.getUniqueID());
+
+                if (topUser.getLastKnownName() == null)
+                    topUser.setLastKnownName(globalUser.getLastKnownName());
+                if (globalUser.getPlayedTime(serverInfo) > topUser.getPlayedTimeRaw())
+                    topUser.setPlayedTime(globalUser.getPlayedTime(serverInfo));
+
+                CommonLogger.getImplementation().debug("Updated user " + topUser.getLastKnownName() + " from cache.");
+            }
+
+            // Re-sort
+            return top.stream()
+                    .sorted(Comparator.comparingLong(User::getPlayedTime).reversed())
+                    .collect(Collectors.toList());
+        });
+    }
+
+    public void dumpAll() {
+        this.loadedUsers.clear();
+    }
+
+    private boolean isLoaded(UUID uniqueID) {
+        return this.loadedUsers.containsKey(uniqueID);
     }
 
     private boolean checkEmpty() {

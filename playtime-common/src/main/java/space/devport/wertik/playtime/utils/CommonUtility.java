@@ -19,7 +19,7 @@ public abstract class CommonUtility {
     }
 
     @Nullable
-    public abstract String getOfflinePlayerName(UUID uniqueID);
+    public abstract String getPlayerName(UUID uniqueID);
 
     public abstract boolean isOnline(UUID uniqueID);
 

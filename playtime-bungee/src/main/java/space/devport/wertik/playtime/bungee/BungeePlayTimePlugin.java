@@ -2,8 +2,6 @@ package space.devport.wertik.playtime.bungee;
 
 import lombok.Getter;
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -28,7 +26,6 @@ import space.devport.wertik.playtime.system.LocalUserManager;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.stream.Collectors;
 
 public class BungeePlayTimePlugin extends Plugin {
 
@@ -66,9 +63,7 @@ public class BungeePlayTimePlugin extends Plugin {
         loadOptions();
 
         this.localUserManager = new BungeeLocalUserManager(this, initializeStorage(false));
-        this.localUserManager.loadAll(ProxyServer.getInstance().getPlayers().stream()
-                .map(ProxiedPlayer::getUniqueId)
-                .collect(Collectors.toSet()));
+        this.localUserManager.loadOnline();
 
         this.globalUserManager = new GlobalUserManager();
 
@@ -93,6 +88,8 @@ public class BungeePlayTimePlugin extends Plugin {
             consoleOutput.info("Saving all data...");
             this.localUserManager.saveAll();
 
+            this.globalUserManager.dumpAll();
+
             consoleOutput.info("Closing connections...");
             ConnectionManager.getInstance().closeConnections();
 
@@ -107,6 +104,7 @@ public class BungeePlayTimePlugin extends Plugin {
             this.localUserManager = new BungeeLocalUserManager(this, initializeStorage(false));
             this.localUserManager.loadOnline();
 
+            this.globalUserManager = new GlobalUserManager();
             initializeRemotes();
         }
 

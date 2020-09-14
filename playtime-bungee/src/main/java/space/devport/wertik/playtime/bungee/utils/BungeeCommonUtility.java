@@ -20,7 +20,7 @@ public class BungeeCommonUtility extends CommonUtility {
 
     // Try to at least get it if he's online.
     @Override
-    public String getOfflinePlayerName(UUID uniqueID) {
+    public String getPlayerName(UUID uniqueID) {
         ProxiedPlayer player = plugin.getProxy().getPlayer(uniqueID);
         return player == null ? null : player.getName();
     }
