@@ -102,13 +102,34 @@ public class LocalUserManager {
         return this.loadedUsers.getOrDefault(uniqueID, null);
     }
 
+    public User getUser(String name) {
+        return this.loadedUsers.values().stream()
+                .filter(u -> u.getLastKnownName().equals(name))
+                .findAny()
+                .orElseGet(() -> loadUser(name));
+    }
+
     /**
-     * Load a User from storage and cache.
+     * Load a User from storage and cache him.
      */
     public User loadUser(UUID uniqueID) {
         User user = storage.loadUser(uniqueID);
 
         if (user != null) {
+            if (checkOnline(uniqueID)) user.setOnline();
+
+            this.loadedUsers.put(uniqueID, user);
+            CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
+        }
+        return user;
+    }
+
+    public User loadUser(String name) {
+        User user = storage.loadUser(name);
+
+        if (user != null) {
+            UUID uniqueID = user.getUniqueID();
+
             if (checkOnline(uniqueID)) user.setOnline();
 
             this.loadedUsers.put(uniqueID, user);

@@ -1,7 +1,6 @@
 package space.devport.wertik.playtime.bungee.commands;
 
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -16,7 +15,7 @@ public class BungeePlayTimeCommand extends Command {
     private final BungeePlayTimePlugin plugin;
 
     public BungeePlayTimeCommand(BungeePlayTimePlugin plugin) {
-        super("bungeeplaytime");
+        super("bungeeplaytime", "playtime.bungee", "bpt");
         this.plugin = plugin;
     }
 
@@ -27,29 +26,25 @@ public class BungeePlayTimeCommand extends Command {
             return;
         }
 
+        ProxiedPlayer player;
         switch (args[0].toLowerCase()) {
             case "reload":
                 plugin.reload(sender);
                 break;
             case "check":
-                ProxiedPlayer player;
-                if (args.length > 1) {
-                    player = ProxyServer.getInstance().getPlayer(args[1]);
+                User user;
 
-                    if (player == null) {
-                        sender.sendMessage(BungeeStringUtil.format("&cThat player does not exist."));
-                        return;
-                    }
-                } else {
+                if (args.length <= 1) {
                     if (!(sender instanceof ProxiedPlayer)) {
                         sender.sendMessage(BungeeStringUtil.format("&cYou're not a player!"));
                         return;
                     }
 
                     player = (ProxiedPlayer) sender;
+                    user = plugin.getLocalUserManager().getUser(player.getUniqueId());
+                } else {
+                    user = plugin.getLocalUserManager().getUser(args[1]);
                 }
-
-                User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
 
                 if (user == null) {
                     sender.sendMessage(BungeeStringUtil.format("&cPlayer has no record."));
@@ -65,29 +60,28 @@ public class BungeePlayTimeCommand extends Command {
                     return;
                 }
 
-                //TODO Allow checking offline players
-                if (args.length > 1) {
-                    player = ProxyServer.getInstance().getPlayer(args[1]);
-
-                    if (player == null) {
-                        sender.sendMessage(BungeeStringUtil.format("&cThat player does not exist."));
-                        return;
-                    }
-                } else {
+                GlobalUser globalUser;
+                if (args.length <= 1) {
                     if (!(sender instanceof ProxiedPlayer)) {
                         sender.sendMessage(BungeeStringUtil.format("&cYou're not a player!"));
                         return;
                     }
 
                     player = (ProxiedPlayer) sender;
+                    globalUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
+                } else {
+                    globalUser = plugin.getGlobalUserManager().getGlobalUser(args[1]);
                 }
 
-                GlobalUser globalUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
+                if (globalUser == null) {
+                    sender.sendMessage(BungeeStringUtil.format("&cPlayer has no record over all connected servers."));
+                    return;
+                }
 
                 //TODO Translate
                 StringBuilder message = new StringBuilder("&8&m    &3 Global Play Times");
                 for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
-                    message.append("&8 - &f%serverName% &8= &r%time%"
+                    message.append("\n&8 - &f%serverName% &8= &r%time%"
                             .replace("%serverName%", serverInfo.getName())
                             .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), plugin.getDurationFormat())));
                 }

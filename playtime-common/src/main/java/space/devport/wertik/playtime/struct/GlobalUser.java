@@ -1,6 +1,7 @@
 package space.devport.wertik.playtime.struct;
 
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.system.DataManager;
 
 import java.util.Collections;
@@ -43,5 +44,12 @@ public class GlobalUser {
 
     public Map<ServerInfo, User> getUserRecord() {
         return Collections.unmodifiableMap(userRecord);
+    }
+
+    @Nullable
+    public String getLastKnownName() {
+        return this.userRecord.isEmpty() ? null : this.userRecord.values().stream()
+                .map(User::getLastKnownName)
+                .findFirst().orElse(null);
     }
 }

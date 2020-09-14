@@ -1,7 +1,9 @@
 package space.devport.wertik.playtime.storage.mysql;
 
+import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.NotImplementedException;
 import space.devport.wertik.playtime.TaskChainFactoryHolder;
 import space.devport.wertik.playtime.console.CommonLogger;
@@ -48,23 +50,44 @@ public class MySQLStorage implements IUserStorage {
         });
     }
 
-    /**
-     * Name fallback query.
-     */
-    private long getTimeByName(String name) {
-        CommonLogger.getImplementation().debug("Falling back to name, " + name);
-        ResultSet resultSet = connection.executeQuery(Query.GET_TIME_NAME.get(tableName), name);
+    @Override
+    public User loadUser(String name) {
+
+        if (!exists(name))
+            return null;
+
+        ResultSet resultSet = connection.executeQuery(Query.GET_USER_BY_NAME.get(tableName), name);
 
         long time = 0;
+        UUID uniqueID = null;
+
         if (resultSet != null)
             try {
                 if (resultSet.next()) {
                     time = resultSet.getLong("time");
+                    uniqueID = convertUUID(resultSet.getString("uuid"));
                 }
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            } catch (SQLException exception) {
+                exception.printStackTrace();
             }
-        return time;
+
+        if (uniqueID == null) return null;
+
+        User user = new User(uniqueID);
+        user.setPlayedTime(time);
+
+        return user;
+    }
+
+    @Nullable
+    private UUID convertUUID(String stringUUID) {
+        if (Strings.isNullOrEmpty(stringUUID)) return null;
+
+        try {
+            return UUID.fromString(stringUUID);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @Override
@@ -76,13 +99,13 @@ public class MySQLStorage implements IUserStorage {
 
         long time = 0;
 
-        ResultSet resultSet = connection.executeQuery(Query.GET_TIME.get(tableName), uniqueID.toString());
+        ResultSet resultSet = connection.executeQuery(Query.GET_USER.get(tableName), uniqueID.toString());
 
         try {
             if (resultSet == null || !resultSet.next()) {
+                // Name fallback
                 String name = CommonUtility.getImplementation().getOfflinePlayerName(uniqueID);
-                if (name != null)
-                    time = getTimeByName(name);
+                return loadUser(name);
             } else
                 time = resultSet.getLong("time");
         } catch (SQLException exception) {
@@ -144,14 +167,16 @@ public class MySQLStorage implements IUserStorage {
         throw new NotImplementedException();
     }
 
-    /**
-     * Exists name fallback.
-     */
-    private boolean existsByName(String name) {
-        CommonLogger.getImplementation().debug("Falling back to names, " + name);
+    private boolean exists(String name) {
+
+        if (name == null)
+            return false;
+
+        ResultSet resultSet = connection.executeQuery(Query.EXIST_CHECK_NAME.get(tableName), name);
+
         try {
-            ResultSet rs = connection.executeQuery(Query.EXIST_CHECK_NAME.get(tableName), name);
-            if (rs.next()) return true;
+            if (resultSet.next())
+                return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -162,13 +187,14 @@ public class MySQLStorage implements IUserStorage {
      * Check if the table has this entry.
      */
     public boolean exists(UUID uuid) {
+        ResultSet resultSet = connection.executeQuery(Query.EXIST_CHECK.get(tableName), uuid.toString());
+
         try {
-            ResultSet rs = connection.executeQuery(Query.EXIST_CHECK.get(tableName), uuid.toString());
-            if (rs.next()) return true;
+            if (resultSet.next()) return true;
             else {
+                // Name fallback
                 String name = CommonUtility.getImplementation().getOfflinePlayerName(uuid);
-                if (name != null)
-                    return existsByName(name);
+                return exists(name);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();

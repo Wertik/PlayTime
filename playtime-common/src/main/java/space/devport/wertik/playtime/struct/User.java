@@ -16,6 +16,10 @@ public class User {
 
     @Getter
     @Setter
+    private String lastKnownName;
+
+    @Getter
+    @Setter
     private transient boolean online = false;
 
     @Getter

@@ -35,7 +35,7 @@ public class PlayerListener implements Listener {
         user.setOnline();
 
         // Update global
-        plugin.getGlobalUserManager().updateGlobalUser(player.getUniqueId());
+        plugin.getGlobalUserManager().loadGlobalUser(player.getUniqueId());
     }
 
     @EventHandler

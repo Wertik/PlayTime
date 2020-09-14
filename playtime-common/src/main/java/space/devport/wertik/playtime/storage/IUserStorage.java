@@ -13,6 +13,8 @@ public interface IUserStorage {
 
     User loadUser(UUID uniqueID);
 
+    User loadUser(String name);
+
     Set<User> loadAll();
 
     void saveUser(User user);

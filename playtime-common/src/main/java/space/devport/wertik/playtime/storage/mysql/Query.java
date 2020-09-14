@@ -24,9 +24,9 @@ enum Query {
 
     UPDATE_USER("REPLACE INTO `%table%` (`uuid`, `lastKnownName`, `time`) VALUES (?, ?, ?)"),
 
-    GET_TIME("SELECT `time` FROM `%table%` WHERE `uuid` = ?"),
+    GET_USER("SELECT `time`, `lastKnownName` FROM `%table%` WHERE `uuid` = ?"),
 
-    GET_TIME_NAME("SELECT `time` FROM `%table%` WHERE `lastKnownName` = ?"),
+    GET_USER_BY_NAME("SELECT `time`, `uuid` FROM `%table%` WHERE `lastKnownName` = ?"),
 
     GET_TOP_TEN("SELECT * FROM `%table%` ORDER BY `time` DESC LIMIT 10");
 

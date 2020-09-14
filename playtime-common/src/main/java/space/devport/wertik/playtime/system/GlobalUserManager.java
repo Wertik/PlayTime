@@ -63,9 +63,40 @@ public class GlobalUserManager {
     public GlobalUser getGlobalUser(UUID uniqueID) {
         GlobalUser user;
         if (!this.loadedUsers.containsKey(uniqueID))
-            user = updateGlobalUser(uniqueID);
+            user = loadGlobalUser(uniqueID);
         else
             user = this.loadedUsers.get(uniqueID);
+        return user;
+    }
+
+    public GlobalUser getGlobalUser(String name) {
+        return this.loadedUsers.values().stream()
+                .filter(u -> u.getLastKnownName() != null && u.getLastKnownName().equals(name))
+                .findAny().orElseGet(() -> loadGlobalUser(name));
+    }
+
+    public GlobalUser loadGlobalUser(String name) {
+
+        if (checkEmpty())
+            return null;
+
+        GlobalUser user = null;
+
+        for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
+            User remoteUser = entry.getValue().loadUser(name);
+
+            if (remoteUser == null) continue;
+
+            if (user == null)
+                user = new GlobalUser(remoteUser.getUniqueID());
+
+            user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
+        }
+
+        if (user != null)
+            CommonLogger.getImplementation().debug("Updated global user " + user.getUniqueID());
+        else
+            CommonLogger.getImplementation().debug("Could not load global user " + name);
         return user;
     }
 
@@ -74,7 +105,7 @@ public class GlobalUserManager {
      * Called when a player joins, or the plugin is enabled and he's online.
      */
     @NotNull
-    public GlobalUser updateGlobalUser(UUID uniqueID) {
+    public GlobalUser loadGlobalUser(UUID uniqueID) {
 
         if (checkEmpty()) return new GlobalUser(uniqueID);
 
