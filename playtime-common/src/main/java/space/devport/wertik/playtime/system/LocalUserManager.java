@@ -72,7 +72,10 @@ public class LocalUserManager {
     public User createUser(UUID uniqueID) {
         User user = new User(uniqueID);
 
-        if (checkOnline(uniqueID)) user.setOnline();
+        if (checkOnline(uniqueID)) {
+            user.setOnline();
+            user.setLastKnownName(CommonUtility.getImplementation().getOfflinePlayerName(uniqueID));
+        }
 
         this.loadedUsers.put(uniqueID, user);
         this.storage.saveUser(user);
@@ -104,7 +107,7 @@ public class LocalUserManager {
 
     public User getUser(String name) {
         return this.loadedUsers.values().stream()
-                .filter(u -> u.getLastKnownName().equals(name))
+                .filter(u -> u.getLastKnownName() != null && u.getLastKnownName().equals(name))
                 .findAny()
                 .orElseGet(() -> loadUser(name));
     }
@@ -124,13 +127,15 @@ public class LocalUserManager {
         return user;
     }
 
+    @Nullable
     public User loadUser(String name) {
         User user = storage.loadUser(name);
 
         if (user != null) {
             UUID uniqueID = user.getUniqueID();
 
-            if (checkOnline(uniqueID)) user.setOnline();
+            if (checkOnline(uniqueID))
+                user.setOnline();
 
             this.loadedUsers.put(uniqueID, user);
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);

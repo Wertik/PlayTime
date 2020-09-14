@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Attempt to mimic BukkitTaskChainFactory.
  */
+//TODO remove
 public class BungeeTaskChainFactory extends TaskChainFactory {
 
     public static final TaskChainAbortAction<ProxiedPlayer, String, ?> MESSAGE = new TaskChainAbortAction<ProxiedPlayer, String, Object>() {
@@ -38,8 +39,8 @@ public class BungeeTaskChainFactory extends TaskChainFactory {
     }
 
     public static class BungeeGameInterface implements GameInterface {
-        private final Plugin plugin;
-        private final AsyncQueue asyncQueue;
+        public final Plugin plugin;
+        public final AsyncQueue asyncQueue;
 
         BungeeGameInterface(Plugin plugin, AsyncQueue asyncQueue) {
             this.plugin = plugin;

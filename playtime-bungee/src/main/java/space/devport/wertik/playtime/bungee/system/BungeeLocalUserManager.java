@@ -49,6 +49,12 @@ public class BungeeLocalUserManager extends LocalUserManager {
 
         if (user.getPlayedTime() < total) {
             user.setPlayedTime(total);
+
+            // Reset join time and save
+            if (checkOnline(user.getUniqueID()))
+                user.updateJoinTime();
+            saveUser(user.getUniqueID());
+
             CommonLogger.getImplementation().debug("Imported time from remote servers for user " + user.getUniqueID() + " = " + total);
         }
     }

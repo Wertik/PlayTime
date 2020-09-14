@@ -17,6 +17,11 @@ public class JsonStorage implements IUserStorage {
             .create();
 
     @Override
+    public User loadUser(String name) {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public void initialize() {
         throw new NotImplementedException();
     }

@@ -53,25 +53,24 @@ public class MySQLStorage implements IUserStorage {
     @Override
     public User loadUser(String name) {
 
-        if (!exists(name))
-            return null;
-
         ResultSet resultSet = connection.executeQuery(Query.GET_USER_BY_NAME.get(tableName), name);
 
         long time = 0;
         UUID uniqueID = null;
 
-        if (resultSet != null)
-            try {
-                if (resultSet.next()) {
-                    time = resultSet.getLong("time");
-                    uniqueID = convertUUID(resultSet.getString("uuid"));
-                }
-            } catch (SQLException exception) {
-                exception.printStackTrace();
+        try {
+            if (resultSet != null && resultSet.next()) {
+                time = resultSet.getLong("time");
+                uniqueID = convertUUID(resultSet.getString("uuid"));
             }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
 
-        if (uniqueID == null) return null;
+        if (uniqueID == null) {
+            CommonLogger.getImplementation().debug("Could not load user " + name + " from storage.");
+            return null;
+        }
 
         User user = new User(uniqueID);
         user.setPlayedTime(time);
@@ -92,9 +91,6 @@ public class MySQLStorage implements IUserStorage {
 
     @Override
     public User loadUser(UUID uniqueID) {
-
-        if (!exists(uniqueID)) return null;
-
         User user = new User(uniqueID);
 
         long time = 0;
@@ -106,10 +102,15 @@ public class MySQLStorage implements IUserStorage {
                 // Name fallback
                 String name = CommonUtility.getImplementation().getOfflinePlayerName(uniqueID);
                 return loadUser(name);
-            } else
+            } else {
                 time = resultSet.getLong("time");
+
+                String name = resultSet.getString("lastKnownName");
+                user.setLastKnownName(name);
+            }
         } catch (SQLException exception) {
-            exception.printStackTrace();
+            if (CommonLogger.getImplementation().isDebug())
+                exception.printStackTrace();
         }
 
         user.setPlayedTime(time);
@@ -178,7 +179,8 @@ public class MySQLStorage implements IUserStorage {
             if (resultSet.next())
                 return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            if (CommonLogger.getImplementation().isDebug())
+                ex.printStackTrace();
         }
         return false;
     }
@@ -197,7 +199,8 @@ public class MySQLStorage implements IUserStorage {
                 return exists(name);
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            if (CommonLogger.getImplementation().isDebug())
+                ex.printStackTrace();
         }
         return false;
     }

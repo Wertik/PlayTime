@@ -48,6 +48,10 @@ public class User {
 
     public void setOnline() {
         this.online = true;
+        updateJoinTime();
+    }
+
+    public void updateJoinTime() {
         this.joinTime = System.currentTimeMillis();
     }
 

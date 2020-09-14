@@ -3,6 +3,7 @@ package space.devport.wertik.playtime.bungee.listeners;
 import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
+import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
@@ -51,5 +52,12 @@ public class BungeePlayerListener implements Listener {
             user.setOffline();
             plugin.getLocalUserManager().unloadUser(uniqueID);
         }
+    }
+
+    // Save user data on server switch
+    @EventHandler
+    public void onSwitch(ServerSwitchEvent event) {
+        UUID uniqueID = event.getPlayer().getUniqueId();
+        plugin.getLocalUserManager().saveUser(uniqueID);
     }
 }

@@ -49,6 +49,7 @@ public class GlobalUser {
     @Nullable
     public String getLastKnownName() {
         return this.userRecord.isEmpty() ? null : this.userRecord.values().stream()
+                .filter(u -> u.getLastKnownName() != null)
                 .map(User::getLastKnownName)
                 .findFirst().orElse(null);
     }
