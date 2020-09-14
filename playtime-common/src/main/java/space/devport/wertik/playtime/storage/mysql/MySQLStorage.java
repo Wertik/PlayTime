@@ -13,6 +13,8 @@ import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +52,27 @@ public class MySQLStorage implements IUserStorage {
                     exc.printStackTrace();
                     return null;
                 });
+    }
+
+    @Override
+    public CompletableFuture<List<User>> getTop(int count) {
+        return CompletableFuture.supplyAsync(() -> {
+            ResultSet resultSet = connection.executeQuery(Query.GET_TOP_TEN.get(tableName).replace("%count%", String.valueOf(count)));
+
+            List<User> top = new LinkedList<>();
+            try {
+                while (resultSet.next()) {
+                    UUID uniqueID = convertUUID(resultSet.getString("uuid"));
+                    User user = new User(uniqueID);
+                    user.setPlayedTime(resultSet.getLong("time"));
+                    user.setLastKnownName(resultSet.getString("lastKnownName"));
+                    top.add(user);
+                }
+            } catch (SQLException exception) {
+                throw new CompletionException(exception);
+            }
+            return top;
+        });
     }
 
     @Override

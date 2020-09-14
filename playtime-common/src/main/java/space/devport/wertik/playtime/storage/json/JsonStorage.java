@@ -6,6 +6,7 @@ import space.devport.wertik.playtime.NotImplementedException;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -54,6 +55,11 @@ public class JsonStorage implements IUserStorage {
 
     @Override
     public Set<User> loadAll() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public CompletableFuture<List<User>> getTop(int count) {
         throw new NotImplementedException();
     }
 }

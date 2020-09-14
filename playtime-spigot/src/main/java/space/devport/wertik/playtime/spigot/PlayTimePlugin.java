@@ -14,10 +14,7 @@ import space.devport.wertik.playtime.mysql.ConnectionManager;
 import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
 import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
-import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
-import space.devport.wertik.playtime.spigot.commands.subcommands.CheckSubCommand;
-import space.devport.wertik.playtime.spigot.commands.subcommands.ReloadSubCommand;
-import space.devport.wertik.playtime.spigot.commands.subcommands.ResetSubCommand;
+import space.devport.wertik.playtime.spigot.commands.subcommands.*;
 import space.devport.wertik.playtime.spigot.console.SpigotLogger;
 import space.devport.wertik.playtime.spigot.listeners.PlayerListener;
 import space.devport.wertik.playtime.spigot.system.SpigotLocalUserManager;
@@ -65,7 +62,8 @@ public class PlayTimePlugin extends DevportPlugin {
                 .addSubCommand(new ReloadSubCommand(this))
                 .addSubCommand(new CheckGlobalSubCommand(this))
                 .addSubCommand(new CheckSubCommand(this))
-                .addSubCommand(new ResetSubCommand(this));
+                .addSubCommand(new ResetSubCommand(this))
+                .addSubCommand(new TopSubCommand(this));
     }
 
     @Override

@@ -9,6 +9,7 @@ import space.devport.wertik.playtime.struct.User;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class LocalUserManager {
 
@@ -146,6 +147,10 @@ public class LocalUserManager {
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
         }
         return user;
+    }
+
+    public CompletableFuture<List<User>> getTop(int count) {
+        return storage.getTop(count);
     }
 
     public boolean checkOnline(UUID uniqueID) {
