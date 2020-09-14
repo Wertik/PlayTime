@@ -22,10 +22,15 @@ public class LocalUserManager {
         DataManager.getInstance().setLocalUserManager(this);
     }
 
+    public void loadOnline() {
+        loadAll(CommonUtility.getImplementation().getOnlinePlayers());
+    }
+
     public void loadAll(Set<UUID> players) {
         for (UUID uniqueID : players) {
             loadUser(uniqueID);
         }
+        CommonLogger.getImplementation().info("Loaded " + this.loadedUsers.size() + " user(s)...");
     }
 
     public void saveAll() {

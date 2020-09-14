@@ -1,8 +1,10 @@
 package space.devport.wertik.playtime.utils;
 
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
 import java.util.UUID;
 
 public abstract class CommonUtility {
@@ -20,4 +22,7 @@ public abstract class CommonUtility {
     public abstract String getOfflinePlayerName(UUID uniqueID);
 
     public abstract boolean isOnline(UUID uniqueID);
+
+    @NotNull
+    public abstract Set<UUID> getOnlinePlayers();
 }

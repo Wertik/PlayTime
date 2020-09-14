@@ -3,9 +3,8 @@ package space.devport.wertik.playtime.spigot;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
@@ -31,8 +30,6 @@ import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
-import java.util.stream.Collectors;
-
 public class PlayTimePlugin extends DevportPlugin {
 
     @Getter
@@ -52,9 +49,7 @@ public class PlayTimePlugin extends DevportPlugin {
         loadOptions();
 
         this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
-        this.localUserManager.loadAll(Bukkit.getOnlinePlayers().stream()
-                .map(Player::getUniqueId)
-                .collect(Collectors.toSet()));
+        this.localUserManager.loadOnline();
 
         this.globalUserManager = new GlobalUserManager();
 
@@ -77,7 +72,6 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onPluginDisable() {
         HandlerList.unregisterAll(this);
         this.localUserManager.saveAll();
-        ConnectionManager.getInstance().closeConnections();
     }
 
     /**
@@ -91,6 +85,26 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onReload() {
         registerPlaceholders();
         loadOptions();
+    }
+
+    /**
+     * Save data, reload connections, load data.
+     */
+    public void hardReload(CommandSender sender) {
+        consoleOutput.info("Saving all data...");
+        this.localUserManager.saveAll();
+
+        consoleOutput.info("Closing connections...");
+        ConnectionManager.getInstance().closeConnections();
+
+        consoleOutput.info("Initiating normal reload...");
+        reload(sender);
+
+        consoleOutput.info("Initializing storages...");
+        this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
+        this.localUserManager.loadOnline();
+
+        initializeRemotes();
     }
 
     public ConnectionInfo loadInfo(String path) {

@@ -78,7 +78,6 @@ public class BungeePlayTimeCommand extends Command {
                     return;
                 }
 
-                //TODO Translate
                 StringBuilder message = new StringBuilder("&8&m    &3 Global Play Times");
                 for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
                     message.append("\n&8 - &f%serverName% &8= &r%time%"

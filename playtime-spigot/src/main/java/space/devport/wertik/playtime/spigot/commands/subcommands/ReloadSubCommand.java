@@ -15,18 +15,24 @@ public class ReloadSubCommand extends PlayTimeSubCommand {
 
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
+
+        if (args.length > 0 && args[0].equalsIgnoreCase("hard")) {
+            getPlugin().hardReload(sender);
+            return CommandResult.SUCCESS;
+        }
+
         getPlugin().reload(sender);
         return CommandResult.SUCCESS;
     }
 
     @Override
     public @NotNull String getDefaultUsage() {
-        return "/%label% reload";
+        return "/%label% reload (hard)";
     }
 
     @Override
     public @NotNull String getDefaultDescription() {
-        return "Reload the plugin.";
+        return "Reload the plugin. Add 'hard' to call a hard reload. (Reload data and connections)";
     }
 
     @Override

@@ -13,7 +13,6 @@ import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -122,8 +121,7 @@ public class MySQLStorage implements IUserStorage {
 
     @Override
     public Set<User> loadAll() {
-        //TODO
-        return new HashSet<>();
+        throw new NotImplementedException();
     }
 
     @Override

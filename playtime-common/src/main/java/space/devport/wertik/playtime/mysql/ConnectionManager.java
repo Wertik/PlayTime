@@ -61,12 +61,11 @@ public class ConnectionManager {
         new HashSet<>(this.connections.keySet()).forEach(this::closeConnection);
     }
 
-    public void closeConnection(String name) {
+    private void closeConnection(String name) {
         if (!this.connections.containsKey(name) || !this.connections.get(name).isConnected()) return;
 
         this.connections.get(name).close();
         this.connections.remove(name);
-        //TODO Find all reroutes and migrate if possible.
     }
 
     public Map<String, ServerConnection> getConnections() {
