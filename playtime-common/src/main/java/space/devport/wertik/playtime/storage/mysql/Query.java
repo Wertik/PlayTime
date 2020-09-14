@@ -16,13 +16,10 @@ enum Query {
 
     DELETE_USER("DELETE FROM `%table%` WHERE `uuid` = ?"),
 
-    EXIST_CHECK("SELECT uuid from `%table%` WHERE `uuid` = ?"),
-
-    EXIST_CHECK_NAME("SELECT lastKnownName from `%table%` WHERE `lastKnownName` = ?"),
-
-    INSERT_USER("INSERT IGNORE INTO `%table%` (uuid, lastKnownName, time) VALUES(?, ?, ?)"),
-
-    UPDATE_USER("REPLACE INTO `%table%` (`uuid`, `lastKnownName`, `time`) VALUES (?, ?, ?)"),
+    UPDATE_USER("INSERT INTO `%table%` (`uuid`, `lastKnownName`, `time`) " +
+            "VALUES (?, ?, ?) " +
+            "ON DUPLICATE KEY UPDATE " +
+            "`uuid` = ?, `lastKnownName` = ?, `time` = ?"),
 
     GET_USER("SELECT `time`, `lastKnownName` FROM `%table%` WHERE `uuid` = ?"),
 

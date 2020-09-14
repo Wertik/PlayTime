@@ -128,27 +128,17 @@ public class MySQLStorage implements IUserStorage {
 
     @Override
     public void saveUser(User user) {
-        String lastKnownName = CommonUtility.getImplementation().getOfflinePlayerName(user.getUniqueID());
-
-        boolean exists = exists(user.getUniqueID());
-
-        if (exists)
-            CompletableFuture.runAsync(() -> connection.execute(Query.UPDATE_USER.get(tableName),
-                    user.getUniqueID().toString(),
-                    lastKnownName,
-                    user.getPlayedTime())).exceptionally((exc) -> {
-                exc.printStackTrace();
-                return null;
-            });
-        else
-            CompletableFuture.runAsync(() -> connection.execute(Query.INSERT_USER.get(tableName),
-                    user.getUniqueID().toString(),
-                    lastKnownName,
-                    user.getPlayedTime()))
-                    .exceptionally((exc) -> {
-                        exc.printStackTrace();
-                        return null;
-                    });
+        CompletableFuture.runAsync(() -> connection.execute(Query.UPDATE_USER.get(tableName),
+                user.getUniqueID().toString(),
+                user.getLastKnownName(),
+                user.getPlayedTime(),
+                user.getUniqueID().toString(),
+                user.getLastKnownName(),
+                user.getPlayedTime()))
+                .exceptionally((exc) -> {
+                    exc.printStackTrace();
+                    return null;
+                });
     }
 
     @Override
@@ -172,43 +162,5 @@ public class MySQLStorage implements IUserStorage {
     @Override
     public void purge(Predicate<User> conditions) {
         throw new NotImplementedException();
-    }
-
-    private boolean exists(String name) {
-
-        if (name == null)
-            return false;
-
-        ResultSet resultSet = connection.executeQuery(Query.EXIST_CHECK_NAME.get(tableName), name);
-
-        try {
-            if (resultSet.next())
-                return true;
-        } catch (SQLException ex) {
-            if (CommonLogger.getImplementation().isDebug())
-                ex.printStackTrace();
-        }
-        return false;
-    }
-
-    /**
-     * Check if the table has this entry.
-     */
-    //TODO remove
-    public boolean exists(UUID uuid) {
-        ResultSet resultSet = connection.executeQuery(Query.EXIST_CHECK.get(tableName), uuid.toString());
-
-        try {
-            if (resultSet.next()) return true;
-            else {
-                // Name fallback
-                String name = CommonUtility.getImplementation().getOfflinePlayerName(uuid);
-                return exists(name);
-            }
-        } catch (SQLException ex) {
-            if (CommonLogger.getImplementation().isDebug())
-                ex.printStackTrace();
-        }
-        return false;
     }
 }
