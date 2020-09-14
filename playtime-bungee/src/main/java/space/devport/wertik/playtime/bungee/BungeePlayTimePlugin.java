@@ -3,7 +3,6 @@ package space.devport.wertik.playtime.bungee;
 import lombok.Getter;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -18,6 +17,7 @@ import space.devport.wertik.playtime.bungee.listeners.BungeePlayerListener;
 import space.devport.wertik.playtime.bungee.system.BungeeLocalUserManager;
 import space.devport.wertik.playtime.bungee.taskchain.BungeeTaskChainFactory;
 import space.devport.wertik.playtime.bungee.utils.BungeeCommonUtility;
+import space.devport.wertik.playtime.bungee.utils.BungeeStringUtil;
 import space.devport.wertik.playtime.mysql.ConnectionManager;
 import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
 import space.devport.wertik.playtime.mysql.struct.ServerConnection;
@@ -98,7 +98,7 @@ public class BungeePlayTimePlugin extends Plugin {
         loadConfig();
         loadOptions();
 
-        sender.sendMessage(new TextComponent("&7Done... reload took &f" + (System.currentTimeMillis() - start) + "&7ms."));
+        sender.sendMessage(BungeeStringUtil.format("&7Done... reload took &f" + (System.currentTimeMillis() - start) + "&7ms."));
     }
 
     public void loadOptions() {

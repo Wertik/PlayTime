@@ -2,11 +2,13 @@ package space.devport.wertik.playtime.bungee.commands;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
+import space.devport.wertik.playtime.bungee.utils.BungeeStringUtil;
+import space.devport.wertik.playtime.struct.GlobalUser;
+import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
 public class BungeePlayTimeCommand extends Command {
@@ -14,14 +16,14 @@ public class BungeePlayTimeCommand extends Command {
     private final BungeePlayTimePlugin plugin;
 
     public BungeePlayTimeCommand(BungeePlayTimePlugin plugin) {
-        super("playtime");
+        super("bungeeplaytime");
         this.plugin = plugin;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(new TextComponent("&cSub commands: &fcheck (player)&7, &freload"));
+            sender.sendMessage(BungeeStringUtil.format("&cSub commands: &fcheck (player)&7, &freload&7, &fglobalcheck (player)"));
             return;
         }
 
@@ -35,12 +37,12 @@ public class BungeePlayTimeCommand extends Command {
                     player = ProxyServer.getInstance().getPlayer(args[1]);
 
                     if (player == null) {
-                        sender.sendMessage(new TextComponent("&cThat player does not exist."));
+                        sender.sendMessage(BungeeStringUtil.format("&cThat player does not exist."));
                         return;
                     }
                 } else {
                     if (!(sender instanceof ProxiedPlayer)) {
-                        sender.sendMessage(new TextComponent("&cYou're not a player!"));
+                        sender.sendMessage(BungeeStringUtil.format("&cYou're not a player!"));
                         return;
                     }
 
@@ -50,14 +52,49 @@ public class BungeePlayTimeCommand extends Command {
                 User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
 
                 if (user == null) {
-                    sender.sendMessage(new TextComponent("&cPlayer has no record."));
+                    sender.sendMessage(BungeeStringUtil.format("&cPlayer has no record."));
                     return;
                 }
 
-                sender.sendMessage(new TextComponent("&7Play time: &f" + DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat())));
+                sender.sendMessage(BungeeStringUtil.format("&7Play time: &f" + DurationFormatUtils.formatDuration(user.getPlayedTime(), plugin.getDurationFormat())));
+                break;
+            case "checkglobal":
+
+                if (plugin.getGlobalUserManager().getRemoteStorages().isEmpty()) {
+                    sender.sendMessage(BungeeStringUtil.format("&cNo remote servers connected."));
+                    return;
+                }
+
+                //TODO Allow checking offline players
+                if (args.length > 1) {
+                    player = ProxyServer.getInstance().getPlayer(args[1]);
+
+                    if (player == null) {
+                        sender.sendMessage(BungeeStringUtil.format("&cThat player does not exist."));
+                        return;
+                    }
+                } else {
+                    if (!(sender instanceof ProxiedPlayer)) {
+                        sender.sendMessage(BungeeStringUtil.format("&cYou're not a player!"));
+                        return;
+                    }
+
+                    player = (ProxiedPlayer) sender;
+                }
+
+                GlobalUser globalUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
+
+                //TODO Translate
+                StringBuilder message = new StringBuilder("&8&m    &3 Global Play Times");
+                for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
+                    message.append("&8 - &f%serverName% &8= &r%time%"
+                            .replace("%serverName%", serverInfo.getName())
+                            .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), plugin.getDurationFormat())));
+                }
+                sender.sendMessage(BungeeStringUtil.format(message.toString()));
                 break;
             default:
-                sender.sendMessage(new TextComponent("&cInvalid sub command."));
+                sender.sendMessage(BungeeStringUtil.format("&cInvalid sub command."));
         }
     }
 }
