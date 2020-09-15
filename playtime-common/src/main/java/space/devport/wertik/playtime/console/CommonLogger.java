@@ -8,15 +8,15 @@ public abstract class CommonLogger {
     @Setter
     private static CommonLogger implementation;
 
+    @Getter
+    @Setter
+    private boolean debug = false;
+
     public static CommonLogger getImplementation() {
         if (implementation == null)
             setImplementation(new DummyCommonLogger());
         return implementation;
     }
-
-    @Getter
-    @Setter
-    private boolean debug = false;
 
     public abstract void err(String msg);
 
