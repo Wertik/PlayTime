@@ -90,21 +90,23 @@ public class PlayTimePlugin extends DevportPlugin {
      */
     public void hardReload(CommandSender sender) {
         consoleOutput.info("Saving all data...");
-        this.localUserManager.saveAll();
-        this.globalUserManager.dumpAll();
 
-        consoleOutput.info("Closing connections...");
-        ConnectionManager.getInstance().closeConnections();
+        this.localUserManager.saveAll().thenRunAsync(() -> {
+            consoleOutput.info("Closing connections...");
+            ConnectionManager.getInstance().closeConnections();
+        }).thenRun(() -> {
+            this.globalUserManager.dumpAll();
 
-        consoleOutput.info("Initiating normal reload...");
-        reload(sender);
+            consoleOutput.info("Initiating normal reload...");
+            reload(sender);
 
-        consoleOutput.info("Initializing storages...");
-        this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
-        this.localUserManager.loadOnline();
+            consoleOutput.info("Initializing storages...");
+            this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
+            this.localUserManager.loadOnline();
 
-        this.globalUserManager = new GlobalUserManager();
-        initializeRemotes();
+            this.globalUserManager = new GlobalUserManager();
+            initializeRemotes();
+        });
     }
 
     public ConnectionInfo loadInfo(String path) {

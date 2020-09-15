@@ -81,7 +81,8 @@ public class ServerConnection {
             statement.execute();
             CommonLogger.getImplementation().debug("Executed statement " + statement.toString());
         } catch (SQLException e) {
-            e.printStackTrace();
+            if (CommonLogger.getImplementation().isDebug())
+                e.printStackTrace();
         }
     }
 
@@ -108,7 +109,8 @@ public class ServerConnection {
 
             return resultCached;
         } catch (SQLException e) {
-            e.printStackTrace();
+            if (CommonLogger.getImplementation().isDebug())
+                e.printStackTrace();
         }
 
         return null;

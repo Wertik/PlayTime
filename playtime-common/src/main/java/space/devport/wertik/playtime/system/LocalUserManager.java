@@ -1,6 +1,7 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
@@ -35,10 +36,12 @@ public class LocalUserManager {
         CommonLogger.getImplementation().info("Loaded " + this.loadedUsers.size() + " user(s)...");
     }
 
-    public void saveAll() {
-        for (User user : this.loadedUsers.values()) {
-            storage.saveUser(user);
-        }
+    public CompletableFuture<Void> saveAll() {
+        return CompletableFuture.runAsync(() -> {
+            for (User user : this.loadedUsers.values()) {
+                storage.saveUser(user);
+            }
+        });
     }
 
     /**
@@ -129,6 +132,7 @@ public class LocalUserManager {
      * Load a User from storage and cache him.
      */
     public User loadUser(UUID uniqueID) {
+
         User user = storage.loadUser(uniqueID).join();
 
         if (user != null) {

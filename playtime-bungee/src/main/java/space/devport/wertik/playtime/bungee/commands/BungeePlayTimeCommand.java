@@ -29,7 +29,10 @@ public class BungeePlayTimeCommand extends Command {
         ProxiedPlayer player;
         switch (args[0].toLowerCase()) {
             case "reload":
-                plugin.reload(sender, args.length > 1 && args[1].equalsIgnoreCase("hard"));
+                if (args.length > 1 && args[1].equalsIgnoreCase("hard"))
+                    plugin.hardReload(sender);
+                else
+                    plugin.reload(sender);
                 break;
             case "check":
                 User user;
