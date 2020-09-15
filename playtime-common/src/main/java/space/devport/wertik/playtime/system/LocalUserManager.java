@@ -1,7 +1,6 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
@@ -160,7 +159,8 @@ public class LocalUserManager {
             // Attempt to map username to UUID using remotes.
             UUID uniqueID = DataManager.getInstance().getGlobalUserManager().mapUsername(name);
             if (uniqueID != null) {
-                user = loadUser(uniqueID);
+                if ((user = loadUser(uniqueID)) == null)
+                    user = createUser(uniqueID);
                 user.setLastKnownName(name);
                 return user;
             }
