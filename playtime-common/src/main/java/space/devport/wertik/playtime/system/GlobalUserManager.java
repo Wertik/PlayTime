@@ -1,5 +1,6 @@
 package space.devport.wertik.playtime.system;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
@@ -11,15 +12,24 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class GlobalUserManager {
 
     private final Map<UUID, GlobalUser> loadedUsers = new HashMap<>();
 
     private final Map<String, MySQLStorage> remoteStorages = new HashMap<>();
+
+    @Getter
+    private final Map<String, TopCache> topCache = new HashMap<>();
 
     public GlobalUserManager() {
         DataManager.getInstance().setGlobalUserManager(this);
@@ -44,7 +54,21 @@ public class GlobalUserManager {
             CommonLogger.getImplementation().info("Initialized remote storage for server " + serverName + " with table " + tableName);
             if (networkServer.length > 0 && networkServer[0])
                 CommonLogger.getImplementation().info("Using it as a network server.");
+
+            TopCache topCache = new TopCache(this::getTop, 10);
+            this.topCache.put(serverName, topCache);
         }
+    }
+
+    public void startTopUpdate(int interval) {
+        for (TopCache topCache : this.topCache.values()) {
+            topCache.startUpdate(interval);
+        }
+    }
+
+    public void loadTop() {
+        for (Map.Entry<String, TopCache> entry : this.topCache.entrySet())
+            entry.getValue().load(entry.getKey());
     }
 
     @NotNull
@@ -134,7 +158,8 @@ public class GlobalUserManager {
 
         MySQLStorage storage = getRemoteStorages().get(serverName);
 
-        if (storage == null) return CompletableFuture.supplyAsync(ArrayList::new);
+        if (storage == null)
+            return CompletableFuture.supplyAsync(LinkedList::new);
 
         return storage.getTop(count).thenApplyAsync((top) -> {
 
@@ -150,14 +175,10 @@ public class GlobalUserManager {
                     topUser.setLastKnownName(globalUser.getLastKnownName());
                 if (globalUser.getPlayedTime(serverInfo) > topUser.getPlayedTimeRaw())
                     topUser.setPlayedTime(globalUser.getPlayedTime(serverInfo));
-
-                CommonLogger.getImplementation().debug("Updated user " + topUser.getLastKnownName() + " from cache.");
             }
 
-            // Re-sort
-            return top.stream()
-                    .sorted(Comparator.comparingLong(User::getPlayedTime).reversed())
-                    .collect(Collectors.toList());
+            top.sort(Comparator.comparingLong(User::getPlayedTime).reversed());
+            return top;
         });
     }
 

@@ -66,8 +66,12 @@ public class BungeePlayTimePlugin extends Plugin {
         this.localUserManager.loadOnline();
 
         this.globalUserManager = new GlobalUserManager();
-
         initializeRemotes();
+
+        this.localUserManager.loadTop();
+        this.globalUserManager.loadTop();
+
+        this.globalUserManager.startTopUpdate(configuration.getInt("top-cache-update-interval", 5));
 
         getProxy().getPluginManager().registerListener(this, new BungeePlayerListener(this));
 
@@ -100,6 +104,9 @@ public class BungeePlayTimePlugin extends Plugin {
             this.globalUserManager = new GlobalUserManager();
             initializeRemotes();
 
+            this.globalUserManager.loadTop();
+            this.globalUserManager.startTopUpdate(configuration.getInt("top-cache-update-interval", 5));
+
             sender.sendMessage(BungeeStringUtil.format("&7Done... hard reload took &f" + (System.currentTimeMillis() - start) + "&7ms."));
         });
     }
@@ -109,6 +116,8 @@ public class BungeePlayTimePlugin extends Plugin {
 
         loadConfig();
         loadOptions();
+
+        this.globalUserManager.startTopUpdate(configuration.getInt("top-cache-update-interval", 5));
 
         sender.sendMessage(BungeeStringUtil.format("&7Done... reload took &f" + (System.currentTimeMillis() - start) + "&7ms."));
     }

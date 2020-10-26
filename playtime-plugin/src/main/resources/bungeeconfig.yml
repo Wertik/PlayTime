@@ -8,6 +8,9 @@ debug-enabled: true
 # Import and combine times from remote servers?
 import-connected-servers: true
 
+# Top cache update interval in seconds
+top-cache-update-interval: 300
+
 storage:
 
   # mysql/json

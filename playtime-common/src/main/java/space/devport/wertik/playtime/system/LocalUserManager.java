@@ -8,9 +8,14 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class LocalUserManager {
 
@@ -19,9 +24,17 @@ public class LocalUserManager {
     @Getter
     private final IUserStorage storage;
 
+    @Getter
+    private final TopCache topCache;
+
     public LocalUserManager(IUserStorage storage) {
         this.storage = storage;
         DataManager.getInstance().setLocalUserManager(this);
+        this.topCache = new TopCache((server, position) -> getTop(position), 10);
+    }
+
+    public void loadTop() {
+        topCache.load(null);
     }
 
     public void loadOnline() {
@@ -171,8 +184,6 @@ public class LocalUserManager {
     public CompletableFuture<List<User>> getTop(int count) {
         return storage.getTop(count).thenApplyAsync((top) -> {
 
-            CommonLogger.getImplementation().debug("Top users from db: " + top.stream().map(User::getLastKnownName).collect(Collectors.joining(", ")));
-
             // Update user from cache if he's loaded.
             for (User topUser : top) {
                 if (!isLoaded(topUser.getUniqueID()) || !checkOnline(topUser.getUniqueID()))
@@ -186,14 +197,10 @@ public class LocalUserManager {
                     topUser.setLastKnownName(localUser.getLastKnownName());
                 if (localUser.getPlayedTime() > topUser.getPlayedTimeRaw())
                     topUser.setPlayedTime(localUser.getPlayedTime());
-
-                CommonLogger.getImplementation().debug("Updated user " + topUser.getLastKnownName() + " from cache.");
             }
 
-            // Re-sort
-            return top.stream()
-                    .sorted(Comparator.comparingLong(User::getPlayedTime).reversed())
-                    .collect(Collectors.toList());
+            top.sort(Comparator.comparingLong(User::getPlayedTime).reversed());
+            return top;
         });
     }
 

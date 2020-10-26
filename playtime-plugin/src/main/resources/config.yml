@@ -9,6 +9,9 @@ debug-enabled: true
 # There are no statistics on Bungee.
 import-statistics: true
 
+# Top cache update interval in seconds
+top-cache-update-interval: 300
+
 storage:
 
   # mysql/json

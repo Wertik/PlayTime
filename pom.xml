@@ -6,7 +6,7 @@
 
     <groupId>space.devport.wertik.playtime</groupId>
     <artifactId>PlayTime</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
 
     <name>PlayTime</name>
 
@@ -70,13 +70,13 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.10</version>
+            <version>1.18.16</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>18.0.0</version>
+            <version>19.0.0</version>
             <scope>compile</scope>
         </dependency>
         <!-- GSON -->

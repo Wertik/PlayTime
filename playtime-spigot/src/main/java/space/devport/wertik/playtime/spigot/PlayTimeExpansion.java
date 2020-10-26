@@ -12,8 +12,6 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 public class PlayTimeExpansion extends PlaceholderExpansion {
 
@@ -83,11 +81,10 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
                 if (position == -1) return "invalid_position";
 
-                List<User> top = plugin.getGlobalUserManager().getTop(serverName, position).join();
+                User topUser = plugin.getGlobalUserManager().getTopCache().get(serverName).getPosition(serverName, position);
 
-                if (top.size() < position) return "not_populated";
-
-                User topUser = top.get(position - 1);
+                if (topUser == null)
+                    return "not_populated";
 
                 if (args.length == 4)
                     return String.valueOf(topUser.getPlayedTime());
@@ -102,11 +99,10 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
             if (position == -1) return "invalid_position";
 
-            List<User> top = plugin.getLocalUserManager().getTop(position).join();
+            User topUser = plugin.getLocalUserManager().getTopCache().getPosition(null, position);
 
-            if (top.size() < position) return "not_populated";
-
-            User topUser = top.get(position - 1);
+            if (topUser == null)
+                return "not_populated";
 
             if (args.length == 2)
                 return String.valueOf(topUser.getPlayedTime());

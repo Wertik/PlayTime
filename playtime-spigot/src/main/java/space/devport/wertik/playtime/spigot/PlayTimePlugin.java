@@ -49,10 +49,15 @@ public class PlayTimePlugin extends DevportPlugin {
         this.localUserManager.loadOnline();
 
         this.globalUserManager = new GlobalUserManager();
-
         initializeRemotes();
 
         new PlayTimeLanguage(this);
+
+        this.localUserManager.loadTop();
+        this.globalUserManager.loadTop();
+
+        this.globalUserManager.startTopUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
+        this.localUserManager.getTopCache().startUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
 
         registerPlaceholders();
 
@@ -83,6 +88,9 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onReload() {
         registerPlaceholders();
         loadOptions();
+
+        this.globalUserManager.startTopUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
+        this.localUserManager.getTopCache().startUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
     }
 
     /**

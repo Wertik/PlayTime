@@ -9,7 +9,7 @@
     <parent>
         <groupId>space.devport.wertik.playtime</groupId>
         <artifactId>PlayTime</artifactId>
-        <version>3.0.1</version>
+        <version>3.1.0</version>
     </parent>
 
     <repositories>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.16.2-R0.1-SNAPSHOT</version>
+            <version>1.16.3-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import space.devport.wertik.playtime.console.CommonLogger;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -66,5 +67,18 @@ public class User {
 
     public long getPlayedTimeRaw() {
         return this.playedTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(uniqueID, user.uniqueID);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uniqueID);
     }
 }

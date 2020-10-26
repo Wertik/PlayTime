@@ -29,13 +29,14 @@ public class TopSubCommand extends PlayTimeSubCommand {
         topFuture.thenAcceptAsync((top) -> {
             Message message = language.get("Commands.Top.Header");
             Message lineFormat = language.get("Commands.Top.Line");
-            int index = 0;
+
+            int n = 1;
             for (User user : top) {
-                index++;
+                n++;
                 message.append(lineFormat.toString()
-                        .replace("%position%", String.valueOf(index))
-                        .replace("%name%", user.getLastKnownName())
-                        .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat())));
+                        .replace("%position%", String.valueOf(n)
+                                .replace("%name%", user.getLastKnownName())
+                                .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat()))));
             }
             message.send(sender);
         }).exceptionally((exc) -> {
