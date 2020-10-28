@@ -47,7 +47,7 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
         if (player == null) return "no_player";
 
-        User user = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId());
+        User user = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId()).join();
 
         if (args.length == 0) {
             return String.valueOf(user.getPlayedTime());

@@ -39,7 +39,7 @@ public class JsonStorage implements IUserStorage {
     }
 
     @Override
-    public void saveUser(User user) {
+    public CompletableFuture<Void> saveUser(User user) {
         throw new NotImplementedException();
     }
 

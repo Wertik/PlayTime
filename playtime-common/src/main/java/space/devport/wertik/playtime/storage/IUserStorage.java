@@ -18,7 +18,7 @@ public interface IUserStorage {
 
     Set<User> loadAll();
 
-    void saveUser(User user);
+    CompletableFuture<Void> saveUser(User user);
 
     void deleteUser(User user);
 

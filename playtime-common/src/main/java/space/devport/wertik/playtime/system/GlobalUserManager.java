@@ -12,6 +12,7 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -85,12 +86,7 @@ public class GlobalUserManager {
 
     @NotNull
     public GlobalUser getGlobalUser(UUID uniqueID) {
-        GlobalUser user;
-        if (!this.loadedUsers.containsKey(uniqueID))
-            user = loadGlobalUser(uniqueID);
-        else
-            user = this.loadedUsers.get(uniqueID);
-        return user;
+        return this.loadedUsers.get(uniqueID);
     }
 
     public GlobalUser getGlobalUser(String name) {
@@ -138,20 +134,28 @@ public class GlobalUserManager {
      * Called when a player joins, or the plugin is enabled and he's online.
      */
     @NotNull
-    public GlobalUser loadGlobalUser(UUID uniqueID) {
+    public CompletableFuture<Void> loadGlobalUser(UUID uniqueID) {
 
-        if (checkEmpty()) return new GlobalUser(uniqueID);
+        if (checkEmpty())
+            return new CompletableFuture<>();
 
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
+        List<CompletableFuture<GlobalUser>> futures = new ArrayList<>();
+
         for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
-            User remoteUser = entry.getValue().loadUser(uniqueID).join();
-            if (remoteUser == null) continue;
-            user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
+            futures.add(entry.getValue().loadUser(uniqueID).thenApply(remoteUser -> {
+                if (remoteUser != null)
+                    user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
+                return user;
+            }));
         }
 
-        CommonLogger.getImplementation().debug("Updated global user " + user.getUniqueID());
-        return user;
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(globalUser -> {
+                    CommonLogger.getImplementation().debug("Updated global user " + uniqueID);
+                    return null;
+                });
     }
 
     public CompletableFuture<List<User>> getTop(String serverName, int count) {

@@ -1,6 +1,5 @@
 package space.devport.wertik.playtime.bungee.system;
 
-import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.storage.IUserStorage;
@@ -10,6 +9,7 @@ import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Override to import times from servers.
@@ -31,17 +31,19 @@ public class BungeeLocalUserManager extends LocalUserManager {
     }
 
     @Override
-    public @Nullable User loadUser(String name) {
-        User user = super.loadUser(name);
-        update(user);
-        return user;
+    public CompletableFuture<User> loadUser(String name) {
+        return super.loadUser(name).thenApply(user -> {
+            update(user);
+            return user;
+        });
     }
 
     @Override
-    public User loadUser(UUID uniqueID) {
-        User user = super.loadUser(uniqueID);
-        update(user);
-        return user;
+    public CompletableFuture<User> loadUser(UUID uniqueID) {
+        return super.loadUser(uniqueID).thenApply(user -> {
+            update(user);
+            return user;
+        });
     }
 
     /**
@@ -63,7 +65,7 @@ public class BungeeLocalUserManager extends LocalUserManager {
             // Reset join time and save
             if (checkOnline(user.getUniqueID()))
                 user.updateJoinTime();
-            saveUser(user.getUniqueID());
+            saveUser(user);
 
             CommonLogger.getImplementation().debug("Imported time from remote servers for user " + user.getUniqueID() + " = " + total);
         }

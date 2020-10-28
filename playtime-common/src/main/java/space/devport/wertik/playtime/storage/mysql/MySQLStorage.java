@@ -154,8 +154,8 @@ public class MySQLStorage implements IUserStorage {
     }
 
     @Override
-    public void saveUser(User user) {
-        CompletableFuture.runAsync(() -> connection.execute(Query.UPDATE_USER.get(tableName),
+    public CompletableFuture<Void> saveUser(User user) {
+        return CompletableFuture.runAsync(() -> connection.execute(Query.UPDATE_USER.get(tableName),
                 user.getUniqueID().toString(),
                 user.getLastKnownName(),
                 user.getPlayedTime(),

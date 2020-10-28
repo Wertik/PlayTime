@@ -27,7 +27,7 @@ public class GlobalUser {
     public long getPlayedTime(ServerInfo serverInfo) {
         long time = this.userRecord.containsKey(serverInfo) ? this.userRecord.get(serverInfo).getPlayedTimeRaw() : 0;
         if (serverInfo.isNetworkWide() && CommonUtility.getImplementation().isOnline(uniqueID)) {
-            time += DataManager.getInstance().getLocalUserManager().getOrCreateUser(uniqueID).sinceJoin();
+            time += DataManager.getInstance().getLocalUserManager().getOrCreateUser(uniqueID).join().sinceJoin();
         }
         return time;
     }

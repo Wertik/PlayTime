@@ -56,21 +56,25 @@ public class LocalUserManager {
         });
     }
 
+    public CompletableFuture<User> saveUser(UUID uniqueID) {
+        return saveUser(getUser(uniqueID));
+    }
+
     /**
      * Save user to storage.
      */
-    public boolean saveUser(UUID uniqueID) {
-        User user = this.loadedUsers.getOrDefault(uniqueID, null);
-        if (user == null) return false;
+    public CompletableFuture<User> saveUser(User user) {
+        return CompletableFuture.supplyAsync(() -> user).thenApply(savedUser -> {
+            if (savedUser == null)
+                return null;
 
-        // Attempt to fill out missing names.
-        if (user.getLastKnownName() == null) {
-            user.setLastKnownName(CommonUtility.getImplementation().getPlayerName(uniqueID));
-        }
+            if (savedUser.getLastKnownName() == null)
+                savedUser.setLastKnownName(CommonUtility.getImplementation().getPlayerName(savedUser.getUniqueID()));
 
-        storage.saveUser(user);
-        CommonLogger.getImplementation().debug("Saved user " + uniqueID);
-        return true;
+            storage.saveUser(savedUser);
+            CommonLogger.getImplementation().debug("Saved user " + savedUser.getUniqueID());
+            return savedUser;
+        });
     }
 
     /**
@@ -87,11 +91,18 @@ public class LocalUserManager {
     /**
      * Save and unload from cache.
      */
-    public void unloadUser(UUID uniqueID) {
-        if (saveUser(uniqueID)) {
-            this.loadedUsers.remove(uniqueID);
+    public CompletableFuture<Void> unloadUser(UUID uniqueID) {
+        return CompletableFuture.supplyAsync(() -> {
+            User user = this.loadedUsers.get(uniqueID);
+
+            if (user == null)
+                return null;
+
+            user.setOffline();
+
             CommonLogger.getImplementation().debug("Unloaded user " + uniqueID);
-        }
+            return user;
+        }).thenAccept(this::saveUser);
     }
 
     /**
@@ -117,68 +128,71 @@ public class LocalUserManager {
      * If not saved at all, create a new one.
      */
     @NotNull
-    public User getOrCreateUser(UUID uniqueID) {
-        User user = getUser(uniqueID);
-        return user != null ? user : createUser(uniqueID);
+    public CompletableFuture<User> getOrCreateUser(UUID uniqueID) {
+        return getOrLoadUser(uniqueID).thenApply(user -> user == null ? createUser(uniqueID) : user);
+    }
+
+    public User getUser(UUID uniqueID) {
+        return this.loadedUsers.get(uniqueID);
     }
 
     /**
      * Attempt to get user from cache.
      * If he's not loaded, attempt to do so.
      */
-    @Nullable
-    public User getUser(UUID uniqueID) {
+    @NotNull
+    public CompletableFuture<User> getOrLoadUser(UUID uniqueID) {
         if (!this.loadedUsers.containsKey(uniqueID))
             return loadUser(uniqueID);
-        return this.loadedUsers.getOrDefault(uniqueID, null);
+        return CompletableFuture.supplyAsync(() -> this.loadedUsers.getOrDefault(uniqueID, null));
     }
 
+    @Nullable
     public User getUser(String name) {
         return this.loadedUsers.values().stream()
                 .filter(u -> u.getLastKnownName() != null && u.getLastKnownName().equals(name))
-                .findAny()
-                .orElseGet(() -> loadUser(name));
+                .findAny().orElse(null);
     }
 
     /**
      * Load a User from storage and cache him.
      */
-    public User loadUser(UUID uniqueID) {
-
-        User user = storage.loadUser(uniqueID).join();
-
-        if (user != null) {
-            if (checkOnline(uniqueID)) user.setOnline();
-
-            this.loadedUsers.put(uniqueID, user);
-            CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
-        }
-        return user;
-    }
-
-    @Nullable
-    public User loadUser(String name) {
-        User user = storage.loadUser(name).join();
-
-        if (user != null) {
-            UUID uniqueID = user.getUniqueID();
-
+    public CompletableFuture<User> loadUser(UUID uniqueID) {
+        return storage.loadUser(uniqueID).thenApply(user -> {
             if (checkOnline(uniqueID))
                 user.setOnline();
 
             this.loadedUsers.put(uniqueID, user);
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
-        } else {
-            // Attempt to map username to UUID using remotes.
-            UUID uniqueID = DataManager.getInstance().getGlobalUserManager().mapUsername(name);
-            if (uniqueID != null) {
-                if ((user = loadUser(uniqueID)) == null)
+            return user;
+        });
+    }
+
+    public CompletableFuture<User> loadUser(String name) {
+        return storage.loadUser(name).thenApply(user -> {
+            if (user != null) {
+                UUID uniqueID = user.getUniqueID();
+
+                if (checkOnline(uniqueID))
+                    user.setOnline();
+
+                this.loadedUsers.put(uniqueID, user);
+                CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
+            } else {
+                // Attempt to map username to UUID using remotes.
+                UUID uniqueID = DataManager.getInstance().getGlobalUserManager().mapUsername(name);
+
+                if (uniqueID == null)
+                    return null;
+
+                // a #join() shouldn't matter, since we're async already.
+                if ((user = loadUser(uniqueID).join()) == null)
                     user = createUser(uniqueID);
+
                 user.setLastKnownName(name);
-                return user;
             }
-        }
-        return user;
+            return user;
+        });
     }
 
     public CompletableFuture<List<User>> getTop(int count) {
@@ -191,7 +205,8 @@ public class LocalUserManager {
 
                 User localUser = getUser(topUser.getUniqueID());
 
-                if (localUser == null) continue;
+                if (localUser == null)
+                    continue;
 
                 if (topUser.getLastKnownName() == null)
                     topUser.setLastKnownName(localUser.getLastKnownName());

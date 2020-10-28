@@ -21,43 +21,22 @@ public class BungeePlayerListener implements Listener {
 
     @EventHandler
     public void onJoin(LoginEvent event) {
+        final UUID uniqueID = event.getConnection().getUniqueId();
 
-        UUID uniqueID = event.getConnection().getUniqueId();
-
-        User user;
-        if (!plugin.getLocalUserManager().isLoaded(uniqueID)) {
-            user = plugin.getLocalUserManager().loadUser(uniqueID);
-
-            // Cannot even load the user, create a new one.
-            if (user == null)
-                user = plugin.getLocalUserManager().createUser(uniqueID);
-        } else
-            user = plugin.getLocalUserManager().getOrCreateUser(uniqueID);
-
-        // Set player online here, configure join time.
-        user.setOnline();
+        plugin.getLocalUserManager().loadUser(uniqueID).thenAccept(User::setOnline);
     }
 
     @EventHandler
     public void onDisconnect(PlayerDisconnectEvent event) {
-        UUID uniqueID = event.getPlayer().getUniqueId();
+        final UUID uniqueID = event.getPlayer().getUniqueId();
 
-        // Unload the user
-        if (plugin.getLocalUserManager().isLoaded(uniqueID)) {
-            User user = plugin.getLocalUserManager().getUser(uniqueID);
-
-            // Should never happen
-            if (user == null) return;
-
-            user.setOffline();
-            plugin.getLocalUserManager().unloadUser(uniqueID);
-        }
+        plugin.getLocalUserManager().unloadUser(uniqueID);
     }
 
     // Save user data on server switch
     @EventHandler
     public void onSwitch(ServerSwitchEvent event) {
-        UUID uniqueID = event.getPlayer().getUniqueId();
+        final UUID uniqueID = event.getPlayer().getUniqueId();
         plugin.getLocalUserManager().saveUser(uniqueID);
     }
 }

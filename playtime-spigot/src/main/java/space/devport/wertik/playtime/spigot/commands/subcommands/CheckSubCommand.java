@@ -32,7 +32,7 @@ public class CheckSubCommand extends PlayTimeSubCommand {
             target = (Player) sender;
         }
 
-        User user = getPlugin().getLocalUserManager().getUser(target.getUniqueId());
+        User user = getPlugin().getLocalUserManager().getOrLoadUser(target.getUniqueId()).join();
         if (user == null) {
             language.getPrefixed("Commands.No-Record")
                     .replace("%player%", target.getName())

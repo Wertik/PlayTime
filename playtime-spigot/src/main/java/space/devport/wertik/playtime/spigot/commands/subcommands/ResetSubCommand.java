@@ -9,7 +9,8 @@ import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
-import space.devport.wertik.playtime.struct.User;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ResetSubCommand extends PlayTimeSubCommand {
 
@@ -20,7 +21,7 @@ public class ResetSubCommand extends PlayTimeSubCommand {
     @Override
     protected CommandResult perform(CommandSender sender, String label, String[] args) {
 
-        boolean others = false;
+        AtomicBoolean others = new AtomicBoolean(false);
 
         OfflinePlayer target;
         if (args.length > 0) {
@@ -28,29 +29,30 @@ public class ResetSubCommand extends PlayTimeSubCommand {
 
             if (!sender.hasPermission("playtime.reset.others")) return CommandResult.NO_PERMISSION;
 
-            others = true;
+            others.set(true);
         } else {
             if (!(sender instanceof Player)) return CommandResult.NO_CONSOLE;
 
             target = (Player) sender;
         }
 
-        User user = getPlugin().getLocalUserManager().getUser(target.getUniqueId());
-        if (user == null) {
-            language.getPrefixed("Commands.No-Record")
+        getPlugin().getLocalUserManager().getOrLoadUser(target.getUniqueId()).thenAccept(user -> {
+            if (user == null) {
+                language.getPrefixed("Commands.No-Record")
+                        .replace("%player%", target.getName())
+                        .send(sender);
+                return;
+            }
+
+            getPlugin().getLocalUserManager().deleteUser(user.getUniqueID());
+
+            if (getPlugin().getConfig().getBoolean("import-statistics", false))
+                language.sendPrefixed(sender, "Commands.Reset.Import-Warning");
+
+            language.getPrefixed(others.get() ? "Commands.Reset.Done-Others" : "Commands.Reset.Done")
                     .replace("%player%", target.getName())
                     .send(sender);
-            return CommandResult.FAILURE;
-        }
-
-        getPlugin().getLocalUserManager().deleteUser(user.getUniqueID());
-
-        if (getPlugin().getConfig().getBoolean("import-statistics", false))
-            language.sendPrefixed(sender, "Commands.Reset.Import-Warning");
-
-        language.getPrefixed(others ? "Commands.Reset.Done-Others" : "Commands.Reset.Done")
-                .replace("%player%", target.getName())
-                .send(sender);
+        });
         return CommandResult.SUCCESS;
     }
 

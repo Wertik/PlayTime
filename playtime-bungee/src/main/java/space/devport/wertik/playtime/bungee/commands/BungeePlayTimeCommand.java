@@ -44,10 +44,9 @@ public class BungeePlayTimeCommand extends Command {
                     }
 
                     player = (ProxiedPlayer) sender;
-                    user = plugin.getLocalUserManager().getUser(player.getUniqueId());
-                } else {
+                    user = plugin.getLocalUserManager().getOrLoadUser(player.getUniqueId()).join();
+                } else
                     user = plugin.getLocalUserManager().getUser(args[1]);
-                }
 
                 if (user == null) {
                     sender.sendMessage(BungeeStringUtil.format("&cPlayer has no record."));
