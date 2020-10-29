@@ -51,10 +51,21 @@ public class BungeeLocalUserManager extends LocalUserManager {
      */
     private void update(User user) {
 
-        if (user == null || !plugin.getConfiguration().getBoolean("import-connected-servers", false)) return;
+        if (user == null || !plugin.getConfiguration().getBoolean("import-connected-servers", false))
+            return;
 
         // Import server-wide times
         GlobalUser globalUser = DataManager.getInstance().getGlobalUserManager().getGlobalUser(user.getUniqueID());
+
+        // If the user is null, load him and then retry.
+        if (globalUser == null) {
+            DataManager.getInstance().getGlobalUserManager().loadGlobalUser(user.getUniqueID()).thenRun(() -> {
+                if (DataManager.getInstance().getGlobalUserManager().getGlobalUser(user.getUniqueID()) != null)
+                    update(user);
+            });
+            return;
+        }
+
         long total = globalUser.totalTime();
 
         CommonLogger.getImplementation().debug("Summarized time: " + total + ", stored time: " + user.getPlayedTimeRaw());

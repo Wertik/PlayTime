@@ -31,6 +31,7 @@ public class BungeePlayerListener implements Listener {
         final UUID uniqueID = event.getPlayer().getUniqueId();
 
         plugin.getLocalUserManager().unloadUser(uniqueID);
+        plugin.getGlobalUserManager().unloadGlobalUser(uniqueID);
     }
 
     // Save user data on server switch

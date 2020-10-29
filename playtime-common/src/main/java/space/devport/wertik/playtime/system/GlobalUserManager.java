@@ -84,7 +84,7 @@ public class GlobalUserManager {
         return user;
     }
 
-    @NotNull
+    @Nullable
     public GlobalUser getGlobalUser(UUID uniqueID) {
         return this.loadedUsers.get(uniqueID);
     }
