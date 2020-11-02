@@ -12,15 +12,7 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class GlobalUserManager {
@@ -28,6 +20,20 @@ public class GlobalUserManager {
     private final Map<UUID, GlobalUser> loadedUsers = new HashMap<>();
 
     private final Map<String, MySQLStorage> remoteStorages = new HashMap<>();
+
+    private final Set<UUID> loading = new HashSet<>();
+
+    public void setLoading(UUID uniqueID) {
+        this.loading.add(uniqueID);
+    }
+
+    public void setLoaded(UUID uniqueID) {
+        this.loading.remove(uniqueID);
+    }
+
+    public boolean isLoading(UUID uniqueID) {
+        return this.loading.contains(uniqueID);
+    }
 
     @Getter
     private final Map<String, TopCache> topCache = new HashMap<>();
@@ -57,6 +63,7 @@ public class GlobalUserManager {
                 CommonLogger.getImplementation().info("Using it as a network server.");
 
             TopCache topCache = new TopCache(this::getTop, 10);
+            topCache.setServerName(serverName);
             this.topCache.put(serverName, topCache);
         }
     }
@@ -73,15 +80,32 @@ public class GlobalUserManager {
     }
 
     @NotNull
-    private GlobalUser getOrCreateGlobalUser(UUID uniqueID) {
+    public GlobalUser getOrCreateGlobalUser(UUID uniqueID) {
+        return this.loadedUsers.containsKey(uniqueID) ? this.loadedUsers.get(uniqueID) : createGlobalUser(uniqueID);
+    }
 
-        GlobalUser user;
-        if (!this.loadedUsers.containsKey(uniqueID)) {
-            user = new GlobalUser(uniqueID);
-            this.loadedUsers.put(uniqueID, user);
-        } else user = this.loadedUsers.get(uniqueID);
-
+    @NotNull
+    public GlobalUser createGlobalUser(UUID uniqueID) {
+        GlobalUser user = new GlobalUser(uniqueID);
+        this.loadedUsers.put(uniqueID, user);
         return user;
+    }
+
+    /**
+     * Get a GlobalUser if loaded.
+     * If he's not loaded, start loading and complete returned future when done.
+     */
+    @NotNull
+    public CompletableFuture<GlobalUser> getOrLoadGlobalUser(UUID uniqueID) {
+
+        // Return immediately if he's loaded.
+        if (isLoaded(uniqueID))
+            return CompletableFuture.supplyAsync(() -> getGlobalUser(uniqueID));
+
+        // Trigger a load and complete the supply future when done.
+        CompletableFuture<GlobalUser> future = new CompletableFuture<>();
+        loadGlobalUser(uniqueID).thenRunAsync(() -> future.complete(getGlobalUser(uniqueID)));
+        return future;
     }
 
     @Nullable
@@ -139,12 +163,14 @@ public class GlobalUserManager {
         if (checkEmpty())
             return new CompletableFuture<>();
 
+        setLoading(uniqueID);
+
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
         List<CompletableFuture<GlobalUser>> futures = new ArrayList<>();
 
         for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
-            futures.add(entry.getValue().loadUser(uniqueID).thenApply(remoteUser -> {
+            futures.add(entry.getValue().loadUser(uniqueID).thenApplyAsync(remoteUser -> {
                 if (remoteUser != null)
                     user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
                 return user;
@@ -152,9 +178,10 @@ public class GlobalUserManager {
         }
 
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(globalUser -> {
-                    CommonLogger.getImplementation().debug("Updated global user " + uniqueID);
-                    return null;
+                .thenApplyAsync(globalUser -> {
+                    setLoaded(uniqueID);
+                    CommonLogger.getImplementation().debug("Loaded global user " + uniqueID);
+                    return globalUser;
                 });
     }
 
@@ -174,6 +201,9 @@ public class GlobalUserManager {
 
                 ServerInfo serverInfo = new ServerInfo(serverName, isNetworkServer(serverName));
                 GlobalUser globalUser = getGlobalUser(topUser.getUniqueID());
+
+                if (globalUser == null)
+                    continue;
 
                 if (topUser.getLastKnownName() == null)
                     topUser.setLastKnownName(globalUser.getLastKnownName());
@@ -202,7 +232,7 @@ public class GlobalUserManager {
         this.loadedUsers.remove(uniqueID);
     }
 
-    private boolean isNetworkServer(String serverName) {
+    public boolean isNetworkServer(String serverName) {
         return this.remoteStorages.containsKey(serverName) && this.remoteStorages.get(serverName).isNetworkServer();
     }
 

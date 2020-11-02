@@ -9,7 +9,6 @@ import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
-import space.devport.wertik.playtime.system.TopCache;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.sql.ResultSet;
@@ -48,7 +47,7 @@ public class MySQLStorage implements IUserStorage {
     @Override
     public void initialize() {
         CompletableFuture.runAsync(() -> connection.execute(Query.CREATE_TABLE.get(tableName)))
-                .thenRun(() -> CommonLogger.getImplementation().debug("MySQL storage initialized."))
+                .thenRunAsync(() -> CommonLogger.getImplementation().debug("MySQL storage initialized."))
                 .exceptionally((exc) -> {
                     if (CommonLogger.getImplementation().isDebug())
                         exc.printStackTrace();
@@ -57,6 +56,7 @@ public class MySQLStorage implements IUserStorage {
     }
 
     @Override
+    //TODO Replace with just sorted UUIDs
     public CompletableFuture<List<User>> getTop(int count) {
         return CompletableFuture.supplyAsync(() -> {
             ResultSet resultSet = connection.executeQuery(Query.GET_TOP.get(tableName).replace("%count%", String.valueOf(count)));

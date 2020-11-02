@@ -3,9 +3,11 @@ package space.devport.wertik.playtime.spigot;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.HandlerList;
+import space.devport.utils.ConsoleOutput;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
 import space.devport.utils.utility.VersionUtil;
@@ -14,7 +16,11 @@ import space.devport.wertik.playtime.mysql.ConnectionManager;
 import space.devport.wertik.playtime.mysql.struct.ConnectionInfo;
 import space.devport.wertik.playtime.mysql.struct.ServerConnection;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeCommand;
-import space.devport.wertik.playtime.spigot.commands.subcommands.*;
+import space.devport.wertik.playtime.spigot.commands.subcommands.CheckGlobalSubCommand;
+import space.devport.wertik.playtime.spigot.commands.subcommands.CheckSubCommand;
+import space.devport.wertik.playtime.spigot.commands.subcommands.ReloadSubCommand;
+import space.devport.wertik.playtime.spigot.commands.subcommands.ResetSubCommand;
+import space.devport.wertik.playtime.spigot.commands.subcommands.TopSubCommand;
 import space.devport.wertik.playtime.spigot.console.SpigotLogger;
 import space.devport.wertik.playtime.spigot.listeners.PlayerListener;
 import space.devport.wertik.playtime.spigot.system.SpigotLocalUserManager;
@@ -88,32 +94,44 @@ public class PlayTimePlugin extends DevportPlugin {
     public void onReload() {
         registerPlaceholders();
         loadOptions();
-
-        this.globalUserManager.startTopUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
-        this.localUserManager.getTopCache().startUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
     }
 
     /**
      * Save data, reload connections, load data.
      */
     public void hardReload(CommandSender sender) {
+        consoleOutput.addListener(sender);
         consoleOutput.info("Saving all data...");
 
         this.localUserManager.saveAll().thenRunAsync(() -> {
             consoleOutput.info("Closing connections...");
             ConnectionManager.getInstance().closeConnections();
-        }).thenRun(() -> {
+        }).thenRunAsync(() -> {
             this.globalUserManager.dumpAll();
 
-            consoleOutput.info("Initiating normal reload...");
             reload(sender);
 
             consoleOutput.info("Initializing storages...");
+
             this.localUserManager = new SpigotLocalUserManager(this, initiateStorage());
-            this.localUserManager.loadOnline();
 
             this.globalUserManager = new GlobalUserManager();
             initializeRemotes();
+
+            this.localUserManager.loadOnline();
+            Bukkit.getOnlinePlayers().forEach(p -> this.globalUserManager.loadGlobalUser(p.getUniqueId()));
+
+            this.localUserManager.loadTop();
+            this.globalUserManager.loadTop();
+
+            this.globalUserManager.startTopUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
+            this.localUserManager.getTopCache().startUpdate(configuration.getFileConfiguration().getInt("top-cache-update-interval", 300));
+
+            consoleOutput.removeListener(sender);
+        }).exceptionally(e -> {
+            ConsoleOutput.getInstance().err("An error occurred on hard reload: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         });
     }
 
@@ -135,6 +153,7 @@ public class PlayTimePlugin extends DevportPlugin {
         consoleOutput.info("Starting remote connections and cache...");
 
         ConfigurationSection section = configuration.getFileConfiguration().getConfigurationSection("servers");
+
         if (section == null) return;
 
         for (String serverName : section.getKeys(false)) {
@@ -179,21 +198,26 @@ public class PlayTimePlugin extends DevportPlugin {
     }
 
     private void registerPlaceholders() {
-        if (getPluginManager().getPlugin("PlaceholderAPI") != null) {
 
-            // On version 2.10.9+ unregister expansion.
-            if (VersionUtil.compareVersions("2.10.9", getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion()) < 1) {
-                PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
+        if (getPluginManager().getPlugin("PlaceholderAPI") == null)
+            return;
 
-                if (expansion != null) {
+        // On version 2.10.9+ unregister expansion.
+        if (VersionUtil.compareVersions("2.10.9", getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion()) < 1) {
+            PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
+
+            if (expansion != null) {
+                Bukkit.getScheduler().runTask(this, () -> {
                     expansion.unregister();
-                    consoleOutput.info("Unregistered old playtime expansion (" + expansion.getVersion() + ")");
-                }
+                    new PlayTimeExpansion(this).register();
+                });
+                consoleOutput.info("Unregistered old playtime expansion (" + expansion.getVersion() + ")");
+                return;
             }
-
-            new PlayTimeExpansion(this).register();
-            consoleOutput.info("Found PlaceholderAPI! &aRegistered expansion.");
         }
+
+        Bukkit.getScheduler().runTask(this, () -> new PlayTimeExpansion(this).register());
+        consoleOutput.info("Found PlaceholderAPI! &aRegistered expansion.");
     }
 
     @Override

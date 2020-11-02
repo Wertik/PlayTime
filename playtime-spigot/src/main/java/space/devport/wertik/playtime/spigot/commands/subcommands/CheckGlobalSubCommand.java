@@ -11,7 +11,6 @@ import space.devport.utils.commands.struct.CommandResult;
 import space.devport.utils.text.message.Message;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
-import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.system.DataManager;
 
@@ -40,18 +39,18 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
             target = (Player) sender;
         }
 
-        GlobalUser globalUser = getPlugin().getGlobalUserManager().getGlobalUser(target.getUniqueId());
+        getPlugin().getGlobalUserManager().getOrLoadGlobalUser(target.getUniqueId()).thenAcceptAsync(globalUser -> {
+            Message message = language.get("Commands.Global-Check.Header");
+            Message lineFormat = language.get("Commands.Global-Check.Line");
 
-        Message message = language.get("Commands.Global-Check.Header");
-        Message lineFormat = language.get("Commands.Global-Check.Line");
+            for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
+                message.append(lineFormat.toString()
+                        .replace("%serverName%", serverInfo.getName())
+                        .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
+            }
 
-        for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
-            message.append(lineFormat.toString()
-                    .replace("%serverName%", serverInfo.getName())
-                    .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
-        }
-
-        message.send(sender);
+            message.send(sender);
+        });
         return CommandResult.SUCCESS;
     }
 

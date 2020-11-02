@@ -54,20 +54,23 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
         }
 
         if (args[0].equalsIgnoreCase("global")) {
-            GlobalUser globalUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
 
-            if (args.length < 2) return "not_enough_args";
+            if (args.length < 2)
+                return "not_enough_args";
 
             String serverName = args[1];
 
             if (!plugin.getGlobalUserManager().getRemoteStorages().containsKey(serverName))
                 return "invalid_server";
 
-            if (args.length == 2) {
-                return String.valueOf(globalUser.getPlayedTime(new ServerInfo(serverName)));
-            }
+            GlobalUser globalUser = plugin.getGlobalUserManager().getOrLoadGlobalUser(player.getUniqueId()).join();
 
-            return parseTime(globalUser.getPlayedTime(new ServerInfo(serverName)), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
+            ServerInfo serverInfo = new ServerInfo(serverName, plugin.getGlobalUserManager().isNetworkServer(serverName));
+
+            if (args.length == 2)
+                return String.valueOf(globalUser.getPlayedTime(serverInfo));
+
+            return parseTime(globalUser.getPlayedTime(serverInfo), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
         } else if (args[0].equalsIgnoreCase("top")) {
 
             if (args[1].equalsIgnoreCase("global")) {

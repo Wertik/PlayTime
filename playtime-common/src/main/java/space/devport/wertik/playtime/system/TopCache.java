@@ -1,5 +1,7 @@
 package space.devport.wertik.playtime.system;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.struct.User;
@@ -23,6 +25,10 @@ public class TopCache implements Runnable {
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);
 
     private ScheduledFuture<?> updateTask;
+
+    @Getter
+    @Setter
+    private String serverName;
 
     public TopCache(TopLoader topLoader, int capacity) {
         this.topLoader = topLoader;
@@ -75,6 +81,6 @@ public class TopCache implements Runnable {
 
     @Override
     public void run() {
-
+        load(serverName);
     }
 }

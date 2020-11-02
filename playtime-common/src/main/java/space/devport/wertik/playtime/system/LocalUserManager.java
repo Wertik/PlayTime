@@ -8,9 +8,11 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +22,20 @@ import java.util.concurrent.CompletableFuture;
 public class LocalUserManager {
 
     private final Map<UUID, User> loadedUsers = new HashMap<>();
+
+    private final Set<UUID> loading = new HashSet<>();
+
+    public void setLoading(UUID uniqueID) {
+        this.loading.add(uniqueID);
+    }
+
+    public void setLoaded(UUID uniqueID) {
+        this.loading.remove(uniqueID);
+    }
+
+    public boolean isLoading(UUID uniqueID) {
+        return this.loading.contains(uniqueID);
+    }
 
     @Getter
     private final IUserStorage storage;
@@ -42,18 +58,19 @@ public class LocalUserManager {
     }
 
     public void loadAll(Set<UUID> players) {
+        List<CompletableFuture<User>> futures = new ArrayList<>();
         for (UUID uniqueID : players) {
-            loadUser(uniqueID);
+            futures.add(loadUser(uniqueID));
         }
-        CommonLogger.getImplementation().info("Loaded " + this.loadedUsers.size() + " user(s)...");
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRunAsync(() -> CommonLogger.getImplementation().info("Loaded " + this.loadedUsers.size() + " user(s)..."));
     }
 
     public CompletableFuture<Void> saveAll() {
-        return CompletableFuture.runAsync(() -> {
-            for (User user : this.loadedUsers.values()) {
-                storage.saveUser(user);
-            }
-        });
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (User user : this.loadedUsers.values()) {
+            futures.add(storage.saveUser(user));
+        }
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRunAsync(() -> CommonLogger.getImplementation().info("Saved " + this.loadedUsers.size() + " user(s)..."));
     }
 
     public CompletableFuture<User> saveUser(UUID uniqueID) {
@@ -64,7 +81,7 @@ public class LocalUserManager {
      * Save user to storage.
      */
     public CompletableFuture<User> saveUser(User user) {
-        return CompletableFuture.supplyAsync(() -> user).thenApply(savedUser -> {
+        return CompletableFuture.supplyAsync(() -> user).thenApplyAsync(savedUser -> {
             if (savedUser == null)
                 return null;
 
@@ -102,7 +119,7 @@ public class LocalUserManager {
 
             CommonLogger.getImplementation().debug("Unloaded user " + uniqueID);
             return user;
-        }).thenAccept(this::saveUser);
+        }).thenAcceptAsync(this::saveUser);
     }
 
     /**
@@ -129,7 +146,7 @@ public class LocalUserManager {
      */
     @NotNull
     public CompletableFuture<User> getOrCreateUser(UUID uniqueID) {
-        return getOrLoadUser(uniqueID).thenApply(user -> user == null ? createUser(uniqueID) : user);
+        return getOrLoadUser(uniqueID).thenApplyAsync(user -> user == null ? createUser(uniqueID) : user);
     }
 
     public User getUser(UUID uniqueID) {
@@ -142,9 +159,9 @@ public class LocalUserManager {
      */
     @NotNull
     public CompletableFuture<User> getOrLoadUser(UUID uniqueID) {
-        if (!this.loadedUsers.containsKey(uniqueID))
+        if (!this.loadedUsers.containsKey(uniqueID) && !isLoading(uniqueID))
             return loadUser(uniqueID);
-        return CompletableFuture.supplyAsync(() -> this.loadedUsers.getOrDefault(uniqueID, null));
+        return CompletableFuture.supplyAsync(() -> this.loadedUsers.get(uniqueID));
     }
 
     @Nullable
@@ -158,18 +175,24 @@ public class LocalUserManager {
      * Load a User from storage and cache him.
      */
     public CompletableFuture<User> loadUser(UUID uniqueID) {
-        return storage.loadUser(uniqueID).thenApply(user -> {
+        setLoading(uniqueID);
+        return storage.loadUser(uniqueID).thenApplyAsync(user -> {
+
+            if (user == null)
+                return null;
+
             if (checkOnline(uniqueID))
                 user.setOnline();
 
             this.loadedUsers.put(uniqueID, user);
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
+            setLoaded(uniqueID);
             return user;
         });
     }
 
     public CompletableFuture<User> loadUser(String name) {
-        return storage.loadUser(name).thenApply(user -> {
+        return storage.loadUser(name).thenApplyAsync(user -> {
             if (user != null) {
                 UUID uniqueID = user.getUniqueID();
 
@@ -177,6 +200,7 @@ public class LocalUserManager {
                     user.setOnline();
 
                 this.loadedUsers.put(uniqueID, user);
+                setLoaded(uniqueID);
                 CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
             } else {
                 // Attempt to map username to UUID using remotes.
@@ -185,11 +209,14 @@ public class LocalUserManager {
                 if (uniqueID == null)
                     return null;
 
-                // a #join() shouldn't matter, since we're async already.
-                if ((user = loadUser(uniqueID).join()) == null)
-                    user = createUser(uniqueID);
+                //TODO
+                return loadUser(uniqueID).thenApplyAsync(uuidUser -> {
+                    if (uuidUser == null)
+                        uuidUser = createUser(uniqueID);
 
-                user.setLastKnownName(name);
+                    uuidUser.setLastKnownName(name);
+                    return uuidUser;
+                }).join();
             }
             return user;
         });
