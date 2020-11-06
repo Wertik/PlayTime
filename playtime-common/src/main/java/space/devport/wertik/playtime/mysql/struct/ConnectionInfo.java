@@ -37,7 +37,14 @@ public class ConnectionInfo {
 
     @Override
     public String toString() {
-        return username + "@" + host + ":" + port + "/" + database + " -p " + password;
+        return username + "@" + host + ":" + port + "/" + database + " -p " + beepOut(password);
+    }
+
+    private String beepOut(String input) {
+        StringBuilder str = new StringBuilder();
+        for (int n = 0; n < input.length(); n++)
+            str.append("*");
+        return str.toString();
     }
 
     /**
