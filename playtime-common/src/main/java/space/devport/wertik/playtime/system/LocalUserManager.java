@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,11 +31,11 @@ public class LocalUserManager {
     public LocalUserManager(IUserStorage storage) {
         this.storage = storage;
         DataManager.getInstance().setLocalUserManager(this);
-        this.topCache = new TopCache((server, position) -> getTop(position), 10);
+        this.topCache = new TopCache("local", (server, position) -> getTop(position), 10);
     }
 
     public void loadTop() {
-        topCache.load(null);
+        topCache.load();
     }
 
     public void loadOnline() {
@@ -75,7 +74,7 @@ public class LocalUserManager {
                 savedUser.setLastKnownName(CommonUtility.getImplementation().getPlayerName(savedUser.getUniqueID()));
 
             storage.saveUser(savedUser);
-            CommonLogger.getImplementation().debug("Saved user " + savedUser.getUniqueID());
+            CommonLogger.getImplementation().debug("Saved user " + savedUser.toString());
             return savedUser;
         });
     }
@@ -88,7 +87,7 @@ public class LocalUserManager {
         if (user == null) return;
         this.loadedUsers.remove(uniqueID);
         this.storage.deleteUser(user);
-        CommonLogger.getImplementation().debug("Deleted user " + uniqueID);
+        CommonLogger.getImplementation().debug("Deleted user " + user.toString());
     }
 
     /**
@@ -103,7 +102,7 @@ public class LocalUserManager {
 
             user.setOffline();
 
-            CommonLogger.getImplementation().debug("Unloaded user " + uniqueID);
+            CommonLogger.getImplementation().debug("Unloaded user " + user.toString());
             return user;
         }).thenAcceptAsync(this::saveUser);
     }
@@ -121,7 +120,7 @@ public class LocalUserManager {
 
         this.loadedUsers.put(uniqueID, user);
         this.storage.saveUser(user);
-        CommonLogger.getImplementation().debug("Created user " + uniqueID);
+        CommonLogger.getImplementation().debug("Created user " + user.toString());
         return user;
     }
 
@@ -184,7 +183,7 @@ public class LocalUserManager {
                     user.setOnline();
 
                 this.loadedUsers.put(uniqueID, user);
-                CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
+                CommonLogger.getImplementation().debug("Loaded user " + user.toString());
             } else {
                 // Attempt to map username to UUID using remotes.
                 UUID uniqueID = DataManager.getInstance().getGlobalUserManager().mapUsername(name);

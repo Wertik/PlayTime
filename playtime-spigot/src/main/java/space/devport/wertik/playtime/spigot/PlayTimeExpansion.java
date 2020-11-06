@@ -84,7 +84,7 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
                 if (position == -1) return "invalid_position";
 
-                User topUser = plugin.getGlobalUserManager().getTopCache().get(serverName).getPosition(serverName, position);
+                User topUser = plugin.getGlobalUserManager().getTopCache().get(serverName).getPosition(position);
 
                 if (topUser == null)
                     return "not_populated";
@@ -102,7 +102,7 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
             if (position == -1) return "invalid_position";
 
-            User topUser = plugin.getLocalUserManager().getTopCache().getPosition(null, position);
+            User topUser = plugin.getLocalUserManager().getTopCache().getPosition(position);
 
             if (topUser == null)
                 return "not_populated";

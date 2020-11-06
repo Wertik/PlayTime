@@ -12,7 +12,15 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class GlobalUserManager {
@@ -48,8 +56,7 @@ public class GlobalUserManager {
             if (networkServer.length > 0 && networkServer[0])
                 CommonLogger.getImplementation().info("Using it as a network server.");
 
-            TopCache topCache = new TopCache(this::getTop, 10);
-            topCache.setServerName(serverName);
+            TopCache topCache = new TopCache(serverName, this::getTop, 10);
             this.topCache.put(serverName, topCache);
         }
     }
@@ -61,8 +68,8 @@ public class GlobalUserManager {
     }
 
     public void loadTop() {
-        for (Map.Entry<String, TopCache> entry : this.topCache.entrySet())
-            entry.getValue().load(entry.getKey());
+        for (TopCache cache : this.topCache.values())
+            cache.load();
     }
 
     @NotNull

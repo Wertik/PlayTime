@@ -46,8 +46,9 @@ public class SpigotLocalUserManager extends LocalUserManager {
         if (plugin.getConfig().getBoolean("import-statistics", false)) {
             long statisticTime = StatisticUtil.getTimeFromStatistics(uniqueID);
             if (statisticTime > user.getPlayedTime()) {
+                long old = user.getPlayedTime();
                 user.setPlayedTime(statisticTime);
-                plugin.getConsoleOutput().debug("Imported " + user.getPlayedTimeRaw() + " played time from statistics for " + uniqueID);
+                plugin.getConsoleOutput().debug("Imported " + user.getPlayedTimeRaw() + " from statistics for " + user.toString() + "(old: " + old + ")");
             }
         }
         return user;

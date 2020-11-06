@@ -1,7 +1,6 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.struct.User;
@@ -16,7 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 public class TopCache implements Runnable {
 
-    private int capacity;
+    @Getter
+    private final String serverName;
 
     private final List<User> topUsers = new LinkedList<>();
 
@@ -24,38 +24,38 @@ public class TopCache implements Runnable {
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);
 
+    private int capacity;
+
     private ScheduledFuture<?> updateTask;
 
-    @Getter
-    @Setter
-    private String serverName;
-
-    public TopCache(TopLoader topLoader, int capacity) {
+    public TopCache(String serverName, TopLoader topLoader, int capacity) {
+        this.serverName = serverName;
         this.topLoader = topLoader;
         this.capacity = capacity;
     }
 
-    public void resize(String server, int max) {
+    public void resize(int max) {
+        int old = this.capacity;
         this.capacity = max;
-        CommonLogger.getImplementation().debug("Resized top cache to " + capacity);
-        load(server);
+        CommonLogger.getImplementation().debug("Resized " + serverName + " top cache from " + old + " to " + capacity);
+        load();
     }
 
-    public void load(String server) {
-        topLoader.load(server, capacity).thenAccept(topUsers -> {
+    public void load() {
+        topLoader.load(serverName, capacity).thenAccept(topUsers -> {
             this.topUsers.clear();
             this.topUsers.addAll(topUsers);
-            CommonLogger.getImplementation().debug("Loaded top cache to position " + capacity);
+            CommonLogger.getImplementation().debug("Loaded " + serverName + " top cache to " + capacity);
         });
     }
 
     @Nullable
-    public User getPosition(String server, int position) {
+    public User getPosition(int position) {
         if (position <= 0)
             return null;
 
         if (position > topUsers.size()) {
-            resize(server, position);
+            resize(position);
             return null;
         }
         return topUsers.get(position - 1);
@@ -70,17 +70,17 @@ public class TopCache implements Runnable {
             stop();
 
         this.updateTask = scheduledExecutorService.scheduleAtFixedRate(this, 0, interval, TimeUnit.SECONDS);
-        CommonLogger.getImplementation().info("Started top cache update task at an interval of " + interval);
+        CommonLogger.getImplementation().info("Started " + serverName + " top cache refresh at an interval of " + interval);
     }
 
     public void stop() {
         this.updateTask.cancel(false);
         this.updateTask = null;
-        CommonLogger.getImplementation().info("Stopped top cache update task.");
+        CommonLogger.getImplementation().info("Stopped " + serverName + " top cache refresh");
     }
 
     @Override
     public void run() {
-        load(serverName);
+        load();
     }
 }
