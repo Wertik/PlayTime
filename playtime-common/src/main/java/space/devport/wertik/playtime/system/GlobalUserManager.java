@@ -21,20 +21,6 @@ public class GlobalUserManager {
 
     private final Map<String, MySQLStorage> remoteStorages = new HashMap<>();
 
-    private final Set<UUID> loading = new HashSet<>();
-
-    public void setLoading(UUID uniqueID) {
-        this.loading.add(uniqueID);
-    }
-
-    public void setLoaded(UUID uniqueID) {
-        this.loading.remove(uniqueID);
-    }
-
-    public boolean isLoading(UUID uniqueID) {
-        return this.loading.contains(uniqueID);
-    }
-
     @Getter
     private final Map<String, TopCache> topCache = new HashMap<>();
 
@@ -163,8 +149,6 @@ public class GlobalUserManager {
         if (checkEmpty())
             return new CompletableFuture<>();
 
-        setLoading(uniqueID);
-
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
         List<CompletableFuture<GlobalUser>> futures = new ArrayList<>();
@@ -179,7 +163,6 @@ public class GlobalUserManager {
 
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApplyAsync(globalUser -> {
-                    setLoaded(uniqueID);
                     CommonLogger.getImplementation().debug("Loaded global user " + uniqueID);
                     return globalUser;
                 });

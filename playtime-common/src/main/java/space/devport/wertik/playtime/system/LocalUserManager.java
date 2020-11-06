@@ -23,20 +23,6 @@ public class LocalUserManager {
 
     private final Map<UUID, User> loadedUsers = new HashMap<>();
 
-    private final Set<UUID> loading = new HashSet<>();
-
-    public void setLoading(UUID uniqueID) {
-        this.loading.add(uniqueID);
-    }
-
-    public void setLoaded(UUID uniqueID) {
-        this.loading.remove(uniqueID);
-    }
-
-    public boolean isLoading(UUID uniqueID) {
-        return this.loading.contains(uniqueID);
-    }
-
     @Getter
     private final IUserStorage storage;
 
@@ -159,7 +145,7 @@ public class LocalUserManager {
      */
     @NotNull
     public CompletableFuture<User> getOrLoadUser(UUID uniqueID) {
-        if (!this.loadedUsers.containsKey(uniqueID) && !isLoading(uniqueID))
+        if (!this.loadedUsers.containsKey(uniqueID))
             return loadUser(uniqueID);
         return CompletableFuture.supplyAsync(() -> this.loadedUsers.get(uniqueID));
     }
@@ -175,7 +161,6 @@ public class LocalUserManager {
      * Load a User from storage and cache him.
      */
     public CompletableFuture<User> loadUser(UUID uniqueID) {
-        setLoading(uniqueID);
         return storage.loadUser(uniqueID).thenApplyAsync(user -> {
 
             if (user == null)
@@ -186,7 +171,6 @@ public class LocalUserManager {
 
             this.loadedUsers.put(uniqueID, user);
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
-            setLoaded(uniqueID);
             return user;
         });
     }
@@ -200,7 +184,6 @@ public class LocalUserManager {
                     user.setOnline();
 
                 this.loadedUsers.put(uniqueID, user);
-                setLoaded(uniqueID);
                 CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
             } else {
                 // Attempt to map username to UUID using remotes.

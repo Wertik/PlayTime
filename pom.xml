@@ -6,7 +6,7 @@
 
     <groupId>space.devport.wertik.playtime</groupId>
     <artifactId>PlayTime</artifactId>
-    <version>3.1.4</version>
+    <version>3.1.5</version>
 
     <name>PlayTime</name>
 
@@ -33,7 +33,6 @@
                     <compilerVersion>1.8</compilerVersion>
                     <source>8</source>
                     <target>8</target>
-                    <release>8</release>
                 </configuration>
             </plugin>
             <plugin>

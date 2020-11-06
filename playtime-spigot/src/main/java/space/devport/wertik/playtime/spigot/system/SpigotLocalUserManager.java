@@ -8,6 +8,7 @@ import space.devport.wertik.playtime.struct.User;
 import space.devport.wertik.playtime.system.LocalUserManager;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Override the base to import statistics.
@@ -22,15 +23,33 @@ public class SpigotLocalUserManager extends LocalUserManager {
     }
 
     @Override
+    public CompletableFuture<User> loadUser(UUID uniqueID) {
+        return super.loadUser(uniqueID).thenApplyAsync(this::update);
+    }
+
+    @Override
+    public CompletableFuture<User> loadUser(String name) {
+        return super.loadUser(name).thenApplyAsync(this::update);
+    }
+
+    @Override
     public User createUser(UUID uniqueID) {
         User user = super.createUser(uniqueID);
+        update(user);
+        return user;
+    }
+
+    public User update(User user) {
+        UUID uniqueID = user.getUniqueID();
 
         // Import from statistics if we should.
         if (plugin.getConfig().getBoolean("import-statistics", false)) {
-            user.setPlayedTime(StatisticUtil.getTimeFromStatistics(uniqueID));
-            plugin.getConsoleOutput().debug("Imported " + user.getPlayedTimeRaw() + " played time from statistics for " + uniqueID);
+            long statisticTime = StatisticUtil.getTimeFromStatistics(uniqueID);
+            if (statisticTime > user.getPlayedTime()) {
+                user.setPlayedTime(statisticTime);
+                plugin.getConsoleOutput().debug("Imported " + user.getPlayedTimeRaw() + " played time from statistics for " + uniqueID);
+            }
         }
-
         return user;
     }
 
