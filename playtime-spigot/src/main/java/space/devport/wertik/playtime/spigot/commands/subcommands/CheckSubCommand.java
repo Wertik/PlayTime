@@ -41,7 +41,7 @@ public class CheckSubCommand extends PlayTimeSubCommand {
                 return;
             }
 
-            language.getPrefixed("Commands.Check")
+            language.getPrefixed("Commands.Check.Done")
                     .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat()))
                     .send(sender);
         }).exceptionally(e -> {
