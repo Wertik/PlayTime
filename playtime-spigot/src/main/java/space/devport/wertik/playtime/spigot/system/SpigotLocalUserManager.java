@@ -40,6 +40,10 @@ public class SpigotLocalUserManager extends LocalUserManager {
     }
 
     public User update(User user) {
+
+        if (user == null)
+            return null;
+
         UUID uniqueID = user.getUniqueID();
 
         // Import from statistics if we should.
