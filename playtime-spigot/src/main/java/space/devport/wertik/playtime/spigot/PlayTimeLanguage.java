@@ -14,7 +14,8 @@ public class PlayTimeLanguage extends LanguageDefaults {
         addDefault("Commands.Invalid-Player", "&cPlayer &f%player% &cdoes not exist.");
         addDefault("Commands.No-Record", "&f%player% &chas no record.");
 
-        addDefault("Commands.Check", "&7Play time: &f%time%");
+        addDefault("Commands.Check", "&7Playtime: &f%time%");
+        addDefault("Commands.Check.Could-Not", "&cCouldn't get playtime.");
 
         addDefault("Commands.Reset.Import-Warning", "&7Player has been reset, but '&fimport-statistics&7' is enabled. Time will be imported.");
         addDefault("Commands.Reset.Done", "&7Played time reset.");

@@ -6,11 +6,11 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import space.devport.utils.ConsoleOutput;
 import space.devport.utils.commands.struct.ArgumentRange;
 import space.devport.utils.commands.struct.CommandResult;
 import space.devport.wertik.playtime.spigot.PlayTimePlugin;
 import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
-import space.devport.wertik.playtime.struct.User;
 
 public class CheckSubCommand extends PlayTimeSubCommand {
 
@@ -32,17 +32,27 @@ public class CheckSubCommand extends PlayTimeSubCommand {
             target = (Player) sender;
         }
 
-        User user = getPlugin().getLocalUserManager().getOrLoadUser(target.getUniqueId()).join();
-        if (user == null) {
-            language.getPrefixed("Commands.No-Record")
+        getPlugin().getLocalUserManager().getOrLoadUser(target.getUniqueId()).thenAcceptAsync(user -> {
+
+            if (user == null) {
+                language.getPrefixed("Commands.No-Record")
+                        .replace("%player%", target.getName())
+                        .send(sender);
+                return;
+            }
+
+            language.getPrefixed("Commands.Check")
+                    .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat()))
+                    .send(sender);
+        }).exceptionally(e -> {
+            ConsoleOutput.getInstance().err("Could not get playtime for " + target.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+
+            language.getPrefixed("Commands.Check.Could-Not")
                     .replace("%player%", target.getName())
                     .send(sender);
-            return CommandResult.FAILURE;
-        }
-
-        language.getPrefixed("Commands.Check")
-                .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat()))
-                .send(sender);
+            return null;
+        });
         return CommandResult.SUCCESS;
     }
 
