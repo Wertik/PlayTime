@@ -26,17 +26,20 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
      * */
 
     @Override
-    public @NotNull String getIdentifier() {
+    public @NotNull
+    String getIdentifier() {
         return "playtime";
     }
 
     @Override
-    public @NotNull String getAuthor() {
+    public @NotNull
+    String getAuthor() {
         return String.join(", ", plugin.getDescription().getAuthors());
     }
 
     @Override
-    public @NotNull String getVersion() {
+    public @NotNull
+    String getVersion() {
         return plugin.getDescription().getVersion();
     }
 

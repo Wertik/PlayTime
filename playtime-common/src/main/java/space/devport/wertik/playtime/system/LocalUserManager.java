@@ -8,17 +8,12 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.struct.User;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class LocalUserManager {
+
+    private final LoadCache<UUID, User> loadCache = new LoadCache<>();
 
     private final Map<UUID, User> loadedUsers = new HashMap<>();
 
@@ -158,9 +153,16 @@ public class LocalUserManager {
 
     /**
      * Load a User from storage and cache him.
+     * If he's loading, return the future that's already queued.
      */
     public CompletableFuture<User> loadUser(UUID uniqueID) {
+
+        if (loadCache.isLoading(uniqueID))
+            return loadCache.getLoading(uniqueID);
+
         return storage.loadUser(uniqueID).thenApplyAsync(user -> {
+
+            loadCache.setLoaded(uniqueID);
 
             if (user == null)
                 return null;
@@ -191,7 +193,7 @@ public class LocalUserManager {
                 if (uniqueID == null)
                     return null;
 
-                //TODO
+                //TODO Remove nested future & join
                 return loadUser(uniqueID).thenApplyAsync(uuidUser -> {
                     if (uuidUser == null)
                         uuidUser = createUser(uniqueID);

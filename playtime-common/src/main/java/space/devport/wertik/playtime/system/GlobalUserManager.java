@@ -12,18 +12,12 @@ import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class GlobalUserManager {
+
+    private final LoadCache<UUID, Void> loadCache = new LoadCache<>();
 
     private final Map<UUID, GlobalUser> loadedUsers = new HashMap<>();
 
@@ -158,6 +152,9 @@ public class GlobalUserManager {
 
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
+        if (loadCache.isLoading(uniqueID))
+            return loadCache.getLoading(uniqueID);
+
         List<CompletableFuture<GlobalUser>> futures = new ArrayList<>();
 
         for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
@@ -168,11 +165,13 @@ public class GlobalUserManager {
             }));
         }
 
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+        CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApplyAsync(globalUser -> {
                     CommonLogger.getImplementation().debug("Loaded global user " + uniqueID);
                     return globalUser;
                 });
+        loadCache.setLoading(uniqueID, future);
+        return future;
     }
 
     public CompletableFuture<List<User>> getTop(String serverName, int count) {
