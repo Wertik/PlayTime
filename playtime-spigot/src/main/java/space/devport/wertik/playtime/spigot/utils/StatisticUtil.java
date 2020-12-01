@@ -4,6 +4,8 @@ import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
+import space.devport.utils.ParseUtil;
+import space.devport.utils.utility.reflection.ServerVersion;
 
 import java.util.UUID;
 
@@ -29,12 +31,20 @@ public class StatisticUtil {
     public long getTimeFromStatistics(OfflinePlayer player) {
 
         long time;
-        try {
+        if (ServerVersion.isCurrentAbove(ServerVersion.v1_13))
             time = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
-        } catch (NoSuchFieldError e) {
-            time = player.getStatistic(Statistic.valueOf("PLAY_ONE_TICK"));
-        }
+        else
+            time = getTimeFromStatisticsLegacy(player);
 
         return time * 50L;
+    }
+
+    private long getTimeFromStatisticsLegacy(OfflinePlayer player) {
+        Statistic statistic = ParseUtil.parseEnum("PLAY_ONE_TICK", Statistic.class);
+
+        if (statistic == null)
+            return 0;
+
+        return player.getStatistic(statistic);
     }
 }
