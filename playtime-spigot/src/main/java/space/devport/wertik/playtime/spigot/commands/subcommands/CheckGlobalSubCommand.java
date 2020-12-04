@@ -14,6 +14,9 @@ import space.devport.wertik.playtime.spigot.commands.PlayTimeSubCommand;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.system.DataManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CheckGlobalSubCommand extends PlayTimeSubCommand {
 
     public CheckGlobalSubCommand(PlayTimePlugin plugin) {
@@ -40,14 +43,19 @@ public class CheckGlobalSubCommand extends PlayTimeSubCommand {
         }
 
         getPlugin().getGlobalUserManager().getOrLoadGlobalUser(target.getUniqueId()).thenAcceptAsync(globalUser -> {
-            Message message = language.get("Commands.Global-Check.Header");
+
+            Message message = language.get("Commands.Global-Check.Format");
+
+            List<String> servers = new ArrayList<>();
             Message lineFormat = language.get("Commands.Global-Check.Line");
 
             for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
-                message.append(lineFormat.toString()
-                        .replace("%serverName%", serverInfo.getName())
+                servers.add(lineFormat.toString()
+                        .replace("%serverName%", getPlugin().translateServerName(serverInfo.getName()))
                         .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), getPlugin().getDurationFormat())));
             }
+
+            message.replace("%servers%", String.join("\n", servers));
 
             message.send(sender);
         });

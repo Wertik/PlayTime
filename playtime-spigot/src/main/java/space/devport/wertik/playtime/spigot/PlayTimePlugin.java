@@ -1,5 +1,6 @@
 package space.devport.wertik.playtime.spigot;
 
+import com.google.common.base.Strings;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -10,6 +11,7 @@ import org.bukkit.event.HandlerList;
 import space.devport.utils.ConsoleOutput;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
+import space.devport.utils.text.language.LanguageManager;
 import space.devport.utils.utility.VersionUtil;
 import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.mysql.ConnectionManager;
@@ -168,6 +170,8 @@ public class PlayTimePlugin extends DevportPlugin {
                     section.getString(serverName + ".table", serverName),
                     section.getBoolean(serverName + ".network-server", false));
         }
+
+        fillServerNames();
     }
 
     private IUserStorage initiateStorage() {
@@ -218,6 +222,17 @@ public class PlayTimePlugin extends DevportPlugin {
 
         Bukkit.getScheduler().runTask(this, () -> new PlayTimeExpansion(this).register());
         consoleOutput.info("Found PlaceholderAPI! &aRegistered expansion.");
+    }
+
+    public void fillServerNames() {
+        for (String server : globalUserManager.getRemoteStorages().keySet()) {
+            getManager(LanguageManager.class).addDefault("Servers." + server, server);
+        }
+    }
+
+    public String translateServerName(String server) {
+        String name = getManager(LanguageManager.class).getLanguage().getString("Servers." + server);
+        return Strings.isNullOrEmpty(name) ? server : name;
     }
 
     @Override
