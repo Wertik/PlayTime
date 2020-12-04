@@ -1,9 +1,9 @@
 name: ${project.name}
 version: ${project.version}
 main: space.devport.wertik.playtime.spigot.PlayTimePlugin
-authors: [Wertik1206]
-softdepend: [PlaceholderAPI]
+authors: [ Wertik1206 ]
+softdepend: [ PlaceholderAPI ]
 commands:
   playtime:
     description: Main plugin command.
-    aliases: [pt]
+    aliases: [ pt ]
