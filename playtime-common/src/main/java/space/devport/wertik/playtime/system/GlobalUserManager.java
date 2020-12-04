@@ -170,7 +170,10 @@ public class GlobalUserManager {
                     CommonLogger.getImplementation().debug("Loaded global user " + uniqueID);
                     return globalUser;
                 });
+
         loadCache.setLoading(uniqueID, future);
+        future.thenRunAsync(() -> loadCache.setLoaded(uniqueID));
+
         return future;
     }
 

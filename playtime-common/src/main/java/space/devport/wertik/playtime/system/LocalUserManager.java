@@ -129,6 +129,9 @@ public class LocalUserManager {
         return getOrLoadUser(uniqueID).thenApplyAsync(user -> user == null ? createUser(uniqueID) : user);
     }
 
+    /**
+     * Simply get the user from local cache.
+     */
     public User getUser(UUID uniqueID) {
         return this.loadedUsers.get(uniqueID);
     }
@@ -157,12 +160,11 @@ public class LocalUserManager {
      */
     public CompletableFuture<User> loadUser(UUID uniqueID) {
 
+        // If loading, return appropriate future instance.
         if (loadCache.isLoading(uniqueID))
             return loadCache.getLoading(uniqueID);
 
-        return storage.loadUser(uniqueID).thenApplyAsync(user -> {
-
-            loadCache.setLoaded(uniqueID);
+        CompletableFuture<User> future = storage.loadUser(uniqueID).thenApplyAsync(user -> {
 
             if (user == null)
                 return null;
@@ -171,9 +173,13 @@ public class LocalUserManager {
                 user.setOnline();
 
             this.loadedUsers.put(uniqueID, user);
+
             CommonLogger.getImplementation().debug("Loaded user " + uniqueID);
+            loadCache.setLoaded(uniqueID);
             return user;
         });
+        loadCache.setLoading(uniqueID, future);
+        return future;
     }
 
     public CompletableFuture<User> loadUser(String name) {
