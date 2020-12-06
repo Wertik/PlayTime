@@ -31,6 +31,7 @@ import space.devport.wertik.playtime.storage.IUserStorage;
 import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.storage.struct.StorageType;
+import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
@@ -225,8 +226,8 @@ public class PlayTimePlugin extends DevportPlugin {
     }
 
     public void fillServerNames() {
-        for (String server : globalUserManager.getRemoteStorages().keySet()) {
-            getManager(LanguageManager.class).addDefault("Servers." + server, server);
+        for (ServerInfo info : globalUserManager.getRemoteStorages().keySet()) {
+            getManager(LanguageManager.class).addDefault("Servers." + info.getName(), info.getName());
         }
     }
 

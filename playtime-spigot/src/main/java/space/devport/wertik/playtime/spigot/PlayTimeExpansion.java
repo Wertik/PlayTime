@@ -63,12 +63,12 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
             String serverName = args[1];
 
-            if (!plugin.getGlobalUserManager().getRemoteStorages().containsKey(serverName))
+            if (!plugin.getGlobalUserManager().hasRemote(serverName))
                 return "invalid_server";
 
             GlobalUser globalUser = plugin.getGlobalUserManager().getOrLoadGlobalUser(player.getUniqueId()).join();
 
-            ServerInfo serverInfo = new ServerInfo(serverName, plugin.getGlobalUserManager().isNetworkServer(serverName));
+            ServerInfo serverInfo = plugin.getGlobalUserManager().getServerInfo(serverName);
 
             if (args.length == 2)
                 return String.valueOf(globalUser.getPlayedTime(serverInfo));
@@ -80,14 +80,16 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
                 String serverName = args[2];
 
-                if (!plugin.getGlobalUserManager().getRemoteStorages().containsKey(serverName))
+                if (!plugin.getGlobalUserManager().hasRemote(serverName))
                     return "invalid_server";
 
                 int position = parsePosition(args[3]);
 
                 if (position == -1) return "invalid_position";
 
-                User topUser = plugin.getGlobalUserManager().getTopCache().get(serverName).getPosition(position);
+                ServerInfo info = plugin.getGlobalUserManager().getServerInfo(serverName);
+
+                User topUser = plugin.getGlobalUserManager().getTopCache().get(info).getPosition(position);
 
                 if (topUser == null)
                     return "not_populated";

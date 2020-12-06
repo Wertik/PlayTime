@@ -5,10 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Holds played time on other servers.
@@ -48,11 +45,18 @@ public class GlobalUser {
         return Collections.unmodifiableMap(userRecord);
     }
 
+    @Override
+    public String toString() {
+        String name = getLastKnownName();
+        return name == null ? "none" : name;
+    }
+
     @Nullable
     public String getLastKnownName() {
-        return this.userRecord.isEmpty() ? null : this.userRecord.values().stream()
-                .filter(u -> u.getLastKnownName() != null)
-                .map(User::getLastKnownName)
-                .findFirst().orElse(null);
+        for (User user : new HashSet<>(this.userRecord.values())) {
+            if (user.getLastKnownName() != null)
+                return user.getLastKnownName();
+        }
+        return null;
     }
 }

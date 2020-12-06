@@ -1,6 +1,7 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
@@ -21,13 +22,20 @@ public class GlobalUserManager {
 
     private final Map<UUID, GlobalUser> loadedUsers = new HashMap<>();
 
-    private final Map<String, MySQLStorage> remoteStorages = new HashMap<>();
+    private final Map<ServerInfo, MySQLStorage> remoteStorages = new HashMap<>();
 
     @Getter
-    private final Map<String, TopCache> topCache = new HashMap<>();
+    private final Map<ServerInfo, TopCache> topCache = new HashMap<>();
 
     public GlobalUserManager() {
         DataManager.getInstance().setGlobalUserManager(this);
+    }
+
+    @NotNull
+    public ServerInfo getServerInfo(String server) {
+        return remoteStorages.keySet().stream()
+                .filter(i -> i.getName().equals(server))
+                .findAny().orElse(new ServerInfo(server));
     }
 
     /**
@@ -36,22 +44,26 @@ public class GlobalUserManager {
      */
     public void initializeStorage(String serverName, ConnectionInfo connectionInfo, String tableName, boolean... networkServer) {
 
-        if (this.remoteStorages.containsKey(serverName)) return;
+        ServerInfo info = new ServerInfo(serverName, networkServer.length > 0 && networkServer[0]);
+
+        if (this.remoteStorages.containsKey(info))
+            return;
 
         ServerConnection connection = ConnectionManager.getInstance().initializeConnection(serverName, connectionInfo);
 
         if (connection == null) {
             CommonLogger.getImplementation().err("Could not initialize remote storage " + serverName + " with table " + tableName);
         } else {
-            MySQLStorage storage = new MySQLStorage(connection, tableName, networkServer.length > 0 && networkServer[0]);
+            MySQLStorage storage = new MySQLStorage(connection, tableName, info.isNetworkWide());
 
-            this.remoteStorages.put(serverName, storage);
-            CommonLogger.getImplementation().info("Initialized remote storage for server " + serverName + " with table " + tableName);
-            if (networkServer.length > 0 && networkServer[0])
+            this.remoteStorages.put(info, storage);
+            CommonLogger.getImplementation().info("Initialized remote storage for server " + info.toString() + " with table " + tableName);
+
+            if (info.isNetworkWide())
                 CommonLogger.getImplementation().info("Using it as a network server.");
 
             TopCache topCache = new TopCache(serverName, this::getTop, 10);
-            this.topCache.put(serverName, topCache);
+            this.topCache.put(info, topCache);
         }
     }
 
@@ -113,7 +125,7 @@ public class GlobalUserManager {
 
         GlobalUser user = null;
 
-        for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
+        for (Map.Entry<ServerInfo, MySQLStorage> entry : remoteStorages.entrySet()) {
             User remoteUser = entry.getValue().loadUser(name).join();
 
             if (remoteUser == null) continue;
@@ -121,7 +133,7 @@ public class GlobalUserManager {
             if (user == null)
                 user = new GlobalUser(remoteUser.getUniqueID());
 
-            user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
+            user.updateRecord(entry.getKey(), remoteUser);
         }
 
         if (user != null)
@@ -148,28 +160,42 @@ public class GlobalUserManager {
     public CompletableFuture<Void> loadGlobalUser(UUID uniqueID) {
 
         if (checkEmpty())
-            return new CompletableFuture<>();
+            return CompletableFuture.completedFuture(null);
 
         GlobalUser user = getOrCreateGlobalUser(uniqueID);
 
         if (loadCache.isLoading(uniqueID))
             return loadCache.getLoading(uniqueID);
 
-        List<CompletableFuture<GlobalUser>> futures = new ArrayList<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-        for (Map.Entry<String, MySQLStorage> entry : remoteStorages.entrySet()) {
-            futures.add(entry.getValue().loadUser(uniqueID).thenApplyAsync(remoteUser -> {
-                if (remoteUser != null)
-                    user.updateRecord(new ServerInfo(entry.getKey(), isNetworkServer(entry.getKey())), remoteUser);
-                return user;
-            }));
+        for (Map.Entry<ServerInfo, MySQLStorage> entry : remoteStorages.entrySet()) {
+            CompletableFuture<Void> userFuture = entry.getValue().loadUser(uniqueID).thenAcceptAsync(remoteUser -> {
+                if (remoteUser != null) {
+                    user.updateRecord(entry.getKey(), remoteUser);
+                    CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString());
+                    return;
+                }
+                CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString() + ", doesn't have an account there.");
+            });
+
+            userFuture.exceptionally(e -> {
+                CommonLogger.getImplementation().warn("Could not load remote " + entry.getKey().toString() + " for global user " + user.toString());
+                e.printStackTrace();
+                return null;
+            });
+
+            futures.add(userFuture);
         }
 
         CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApplyAsync(globalUser -> {
-                    CommonLogger.getImplementation().debug("Loaded global user " + uniqueID);
-                    return globalUser;
-                });
+                .thenRunAsync(() -> CommonLogger.getImplementation().debug("Loaded global user " + user.toString()));
+
+        future.exceptionally(e -> {
+            CommonLogger.getImplementation().warn("Could not load global user " + user.getLastKnownName() + " properly.");
+            e.printStackTrace();
+            return null;
+        });
 
         loadCache.setLoading(uniqueID, future);
         future.thenRunAsync(() -> loadCache.setLoaded(uniqueID));
@@ -179,7 +205,7 @@ public class GlobalUserManager {
 
     public CompletableFuture<List<User>> getTop(String serverName, int count) {
 
-        MySQLStorage storage = getRemoteStorages().get(serverName);
+        MySQLStorage storage = getRemote(serverName);
 
         if (storage == null)
             return CompletableFuture.supplyAsync(LinkedList::new);
@@ -225,10 +251,23 @@ public class GlobalUserManager {
     }
 
     public boolean isNetworkServer(String serverName) {
-        return this.remoteStorages.containsKey(serverName) && this.remoteStorages.get(serverName).isNetworkServer();
+        return getServerInfo(serverName).isNetworkWide();
     }
 
-    public Map<String, MySQLStorage> getRemoteStorages() {
+    @Nullable
+    public MySQLStorage getRemote(String name) {
+        return this.remoteStorages.keySet().stream()
+                .filter(i -> i.getName().equals(name))
+                .findAny()
+                .map(remoteStorages::get)
+                .orElse(null);
+    }
+
+    public boolean hasRemote(String name) {
+        return this.remoteStorages.keySet().stream().anyMatch(i -> i.getName().equals(name));
+    }
+
+    public Map<ServerInfo, MySQLStorage> getRemoteStorages() {
         return Collections.unmodifiableMap(this.remoteStorages);
     }
 }
