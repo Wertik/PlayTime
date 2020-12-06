@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Holds played time on other servers.
@@ -18,9 +19,10 @@ public class GlobalUser {
     @Getter
     private final UUID uniqueID;
 
+    @Getter
     private String lastKnownName;
 
-    private final Map<ServerInfo, User> userRecord = new HashMap<>();
+    private final Map<ServerInfo, User> userRecord = new ConcurrentHashMap<>();
 
     public GlobalUser(UUID uniqueID) {
         this.uniqueID = uniqueID;
@@ -54,13 +56,8 @@ public class GlobalUser {
         return Collections.unmodifiableMap(userRecord);
     }
 
-    @NotNull
-    public String getLastKnownName() {
-        return lastKnownName == null ? uniqueID.toString() : lastKnownName;
-    }
-
     @Override
     public String toString() {
-        return getLastKnownName() + "[" + userRecord.size() + "]";
+        return (lastKnownName == null ? uniqueID.toString() : lastKnownName) + "[" + userRecord.size() + "]";
     }
 }

@@ -32,6 +32,7 @@ import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.storage.struct.StorageType;
 import space.devport.wertik.playtime.struct.ServerInfo;
+import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
@@ -83,7 +84,11 @@ public class PlayTimePlugin extends DevportPlugin {
     @Override
     public void onPluginDisable() {
         HandlerList.unregisterAll(this);
-        this.localUserManager.saveAll();
+        localUserManager.getTopCache().stop();
+        globalUserManager.stopTopCache();
+        this.localUserManager.saveAll().thenRunAsync(() -> {
+            ConnectionManager.getInstance().closeConnections();
+        });
     }
 
     /**

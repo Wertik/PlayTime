@@ -73,6 +73,10 @@ public class GlobalUserManager {
         }
     }
 
+    public void stopTopCache() {
+        this.topCache.values().forEach(TopCache::stop);
+    }
+
     public void loadTop() {
         for (TopCache cache : this.topCache.values())
             cache.load();
@@ -162,10 +166,13 @@ public class GlobalUserManager {
         if (checkEmpty())
             return CompletableFuture.completedFuture(null);
 
-        GlobalUser user = getOrCreateGlobalUser(uniqueID);
-
         if (loadCache.isLoading(uniqueID))
             return loadCache.getLoading(uniqueID);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        loadCache.setLoading(uniqueID, future);
+
+        GlobalUser user = createGlobalUser(uniqueID);
 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
@@ -173,10 +180,10 @@ public class GlobalUserManager {
             CompletableFuture<Void> userFuture = entry.getValue().loadUser(uniqueID).thenAcceptAsync(remoteUser -> {
                 if (remoteUser != null) {
                     user.updateRecord(entry.getKey(), remoteUser);
-                    CommonLogger.getImplementation().debug("Queried time for " + user.getLastKnownName() + " from " + entry.getKey().toString());
+                    CommonLogger.getImplementation().debug("Queried time (" + remoteUser.getPlayedTime() + ") for " + user.toString() + " from " + entry.getKey().toString());
                     return;
                 }
-                CommonLogger.getImplementation().debug("Queried time for " + user.getLastKnownName() + " from " + entry.getKey().toString() + ", doesn't have an account there.");
+                CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString() + ", doesn't have an account there.");
             });
 
             userFuture.exceptionally(e -> {
@@ -188,17 +195,18 @@ public class GlobalUserManager {
             futures.add(userFuture);
         }
 
-        CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenRunAsync(() -> CommonLogger.getImplementation().debug("Loaded global user " + user.toString()));
+        future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
         future.exceptionally(e -> {
-            CommonLogger.getImplementation().warn("Could not load global user " + user.getLastKnownName() + " properly.");
+            CommonLogger.getImplementation().warn("Could not load global user " + user.toString() + " properly.");
             e.printStackTrace();
             return null;
         });
 
-        loadCache.setLoading(uniqueID, future);
-        future.thenRunAsync(() -> loadCache.setLoaded(uniqueID));
+        future.thenRunAsync(() -> {
+            loadCache.setLoaded(uniqueID);
+            CommonLogger.getImplementation().debug("Loaded global user " + user.toString());
+        });
 
         return future;
     }
