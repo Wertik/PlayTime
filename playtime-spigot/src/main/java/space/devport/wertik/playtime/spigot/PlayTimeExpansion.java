@@ -66,7 +66,12 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
             if (!plugin.getGlobalUserManager().hasRemote(serverName))
                 return "invalid_server";
 
-            GlobalUser globalUser = plugin.getGlobalUserManager().getOrLoadGlobalUser(player.getUniqueId()).join();
+            GlobalUser globalUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
+
+            if (globalUser == null) {
+                plugin.getGlobalUserManager().loadGlobalUser(player.getUniqueId());
+                return "loading";
+            }
 
             ServerInfo serverInfo = plugin.getGlobalUserManager().getServerInfo(serverName);
 

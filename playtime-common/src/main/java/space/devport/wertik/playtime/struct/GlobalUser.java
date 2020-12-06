@@ -1,11 +1,14 @@
 package space.devport.wertik.playtime.struct;
 
 import lombok.Getter;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Holds played time on other servers.
@@ -14,6 +17,8 @@ public class GlobalUser {
 
     @Getter
     private final UUID uniqueID;
+
+    private String lastKnownName;
 
     private final Map<ServerInfo, User> userRecord = new HashMap<>();
 
@@ -34,6 +39,10 @@ public class GlobalUser {
     }
 
     public void updateRecord(ServerInfo info, User user) {
+        // Update name
+        if (lastKnownName == null && user.getLastKnownName() != null)
+            this.lastKnownName = user.getLastKnownName();
+
         this.userRecord.put(info, user);
     }
 
@@ -45,18 +54,13 @@ public class GlobalUser {
         return Collections.unmodifiableMap(userRecord);
     }
 
-    @Override
-    public String toString() {
-        String name = getLastKnownName();
-        return name == null ? "none" : name;
+    @NotNull
+    public String getLastKnownName() {
+        return lastKnownName == null ? uniqueID.toString() : lastKnownName;
     }
 
-    @Nullable
-    public String getLastKnownName() {
-        for (User user : new HashSet<>(this.userRecord.values())) {
-            if (user.getLastKnownName() != null)
-                return user.getLastKnownName();
-        }
-        return null;
+    @Override
+    public String toString() {
+        return getLastKnownName() + "[" + userRecord.size() + "]";
     }
 }

@@ -173,14 +173,14 @@ public class GlobalUserManager {
             CompletableFuture<Void> userFuture = entry.getValue().loadUser(uniqueID).thenAcceptAsync(remoteUser -> {
                 if (remoteUser != null) {
                     user.updateRecord(entry.getKey(), remoteUser);
-                    CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString());
+                    CommonLogger.getImplementation().debug("Queried time for " + user.getLastKnownName() + " from " + entry.getKey().toString());
                     return;
                 }
-                CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString() + ", doesn't have an account there.");
+                CommonLogger.getImplementation().debug("Queried time for " + user.getLastKnownName() + " from " + entry.getKey().toString() + ", doesn't have an account there.");
             });
 
             userFuture.exceptionally(e -> {
-                CommonLogger.getImplementation().warn("Could not load remote " + entry.getKey().toString() + " for global user " + user.toString());
+                CommonLogger.getImplementation().warn("Could not load remote " + entry.getKey().toString() + " for global user " + user.getLastKnownName());
                 e.printStackTrace();
                 return null;
             });
