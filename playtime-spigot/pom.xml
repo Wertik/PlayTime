@@ -9,7 +9,7 @@
     <parent>
         <groupId>space.devport.wertik.playtime</groupId>
         <artifactId>PlayTime</artifactId>
-        <version>3.1.10</version>
+        <version>3.1.11</version>
     </parent>
 
     <repositories>
