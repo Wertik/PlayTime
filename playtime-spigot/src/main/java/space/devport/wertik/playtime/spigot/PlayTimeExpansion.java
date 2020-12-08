@@ -55,14 +55,17 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
         if (player == null) return "no_player";
 
-        CompletableFuture<User> future = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId());
+        User user = plugin.getLocalUserManager().getUser(player.getUniqueId());
 
         if (args.length == 0) {
 
-            User user = attemptFetch(future);
-
-            if (user == null)
+            if (user == null) {
+                plugin.getLocalUserManager().loadUser(player.getUniqueId()).thenAcceptAsync(loadedUser -> {
+                    if (loadedUser == null)
+                        plugin.getLocalUserManager().createUser(player.getUniqueId());
+                });
                 return "loading";
+            }
 
             return String.valueOf(user.getPlayedTime());
         }
@@ -137,25 +140,15 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
                 return parseTime(topUser.getPlayedTime(), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
         }
 
-        User user = attemptFetch(future);
-
-        if (user == null)
+        if (user == null) {
+            plugin.getLocalUserManager().loadUser(player.getUniqueId()).thenAcceptAsync(loadedUser -> {
+                if (loadedUser == null)
+                    plugin.getLocalUserManager().createUser(player.getUniqueId());
+            });
             return "loading";
+        }
 
         return parseTime(user.getPlayedTime(), args[0], args.length > 1 && args[1].equalsIgnoreCase("start"));
-    }
-
-    private User attemptFetch(CompletableFuture<User> future) {
-        if (!future.isDone())
-            return null;
-
-        try {
-            return future.join();
-        } catch (CompletionException | CancellationException e) {
-            CommonLogger.getImplementation().warn("Could not load user for placeholders. Reason: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
     }
 
     private int parsePosition(String str) {
