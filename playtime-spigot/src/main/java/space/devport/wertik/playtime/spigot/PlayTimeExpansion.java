@@ -152,7 +152,7 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
         try {
             return future.join();
         } catch (CompletionException | CancellationException e) {
-            CommonLogger.getImplementation().warn("Could not load user for placeholders. Reason:" + e.getMessage());
+            CommonLogger.getImplementation().warn("Could not load user for placeholders. Reason: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
