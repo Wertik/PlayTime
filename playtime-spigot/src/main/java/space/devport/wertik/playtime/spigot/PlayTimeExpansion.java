@@ -8,9 +8,14 @@ import org.jetbrains.annotations.NotNull;
 import space.devport.utils.text.StringUtil;
 import space.devport.wertik.playtime.TimeElement;
 import space.devport.wertik.playtime.TimeUtil;
+import space.devport.wertik.playtime.console.CommonLogger;
 import space.devport.wertik.playtime.struct.GlobalUser;
 import space.devport.wertik.playtime.struct.ServerInfo;
 import space.devport.wertik.playtime.struct.User;
+
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 @RequiredArgsConstructor
 public class PlayTimeExpansion extends PlaceholderExpansion {
@@ -50,9 +55,15 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
 
         if (player == null) return "no_player";
 
-        User user = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId()).join();
+        CompletableFuture<User> future = plugin.getLocalUserManager().getOrCreateUser(player.getUniqueId());
 
         if (args.length == 0) {
+
+            User user = attemptFetch(future);
+
+            if (user == null)
+                return "loading";
+
             return String.valueOf(user.getPlayedTime());
         }
 
@@ -126,7 +137,25 @@ public class PlayTimeExpansion extends PlaceholderExpansion {
                 return parseTime(topUser.getPlayedTime(), args[2], args.length > 3 && args[3].equalsIgnoreCase("start"));
         }
 
+        User user = attemptFetch(future);
+
+        if (user == null)
+            return "loading";
+
         return parseTime(user.getPlayedTime(), args[0], args.length > 1 && args[1].equalsIgnoreCase("start"));
+    }
+
+    private User attemptFetch(CompletableFuture<User> future) {
+        if (!future.isDone())
+            return null;
+
+        try {
+            return future.join();
+        } catch (CompletionException | CancellationException e) {
+            CommonLogger.getImplementation().warn("Could not load user for placeholders. Reason:" + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private int parsePosition(String str) {
