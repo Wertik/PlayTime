@@ -34,9 +34,9 @@ public class TopSubCommand extends PlayTimeSubCommand {
             for (User user : top) {
                 n++;
                 message.append(lineFormat.toString()
-                        .replace("%position%", String.valueOf(n)
-                                .replace("%name%", user.getLastKnownName())
-                                .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat()))));
+                        .replace("%position%", String.valueOf(n))
+                        .replace("%name%", user.getLastKnownName())
+                        .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(), getPlugin().getDurationFormat())));
             }
             message.send(sender);
         }).exceptionally((exc) -> {
