@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.Plugin;
 import space.devport.utils.ConsoleOutput;
 import space.devport.utils.DevportPlugin;
 import space.devport.utils.UsageFlag;
@@ -32,7 +33,6 @@ import space.devport.wertik.playtime.storage.json.JsonStorage;
 import space.devport.wertik.playtime.storage.mysql.MySQLStorage;
 import space.devport.wertik.playtime.storage.struct.StorageType;
 import space.devport.wertik.playtime.struct.ServerInfo;
-import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.system.GlobalUserManager;
 import space.devport.wertik.playtime.system.LocalUserManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
@@ -86,9 +86,7 @@ public class PlayTimePlugin extends DevportPlugin {
         HandlerList.unregisterAll(this);
         localUserManager.getTopCache().stop();
         globalUserManager.stopTopCache();
-        this.localUserManager.saveAll().thenRunAsync(() -> {
-            ConnectionManager.getInstance().closeConnections();
-        });
+        this.localUserManager.saveAll().thenRunAsync(() -> ConnectionManager.getInstance().closeConnections());
     }
 
     /**
@@ -209,11 +207,13 @@ public class PlayTimePlugin extends DevportPlugin {
 
     private void registerPlaceholders() {
 
-        if (getPluginManager().getPlugin("PlaceholderAPI") == null)
+        Plugin plugin = getPluginManager().getPlugin("PlaceholderAPI");
+
+        if (plugin == null)
             return;
 
         // On version 2.10.9+ unregister expansion.
-        if (VersionUtil.compareVersions("2.10.9", getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion()) < 1) {
+        if (VersionUtil.compareVersions("2.10.9", plugin.getDescription().getVersion()) < 1) {
             PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager().getExpansion("playtime");
 
             if (expansion != null) {
@@ -244,9 +244,5 @@ public class PlayTimePlugin extends DevportPlugin {
     @Override
     public UsageFlag[] usageFlags() {
         return new UsageFlag[]{UsageFlag.CONFIGURATION, UsageFlag.COMMANDS, UsageFlag.LANGUAGE};
-    }
-
-    public static PlayTimePlugin getInstance() {
-        return getPlugin(PlayTimePlugin.class);
     }
 }
