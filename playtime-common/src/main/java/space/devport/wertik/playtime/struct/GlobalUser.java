@@ -1,12 +1,11 @@
 package space.devport.wertik.playtime.struct;
 
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
+import lombok.Setter;
 import space.devport.wertik.playtime.system.DataManager;
 import space.devport.wertik.playtime.utils.CommonUtility;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +19,7 @@ public class GlobalUser {
     private final UUID uniqueID;
 
     @Getter
+    @Setter
     private String lastKnownName;
 
     private final Map<ServerInfo, User> userRecord = new ConcurrentHashMap<>();

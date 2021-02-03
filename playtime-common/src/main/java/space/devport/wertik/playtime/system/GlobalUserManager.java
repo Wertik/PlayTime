@@ -1,7 +1,7 @@
 package space.devport.wertik.playtime.system;
 
 import lombok.Getter;
-import org.apache.commons.lang3.tuple.Pair;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.console.CommonLogger;
@@ -15,10 +15,12 @@ import space.devport.wertik.playtime.struct.User;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GlobalUserManager {
 
     private final LoadCache<UUID, Void> loadCache = new LoadCache<>();
+    private final LoadCache<String, Void> nameLoadCache = new LoadCache<>();
 
     private final Map<UUID, GlobalUser> loadedUsers = new HashMap<>();
 
@@ -26,6 +28,10 @@ public class GlobalUserManager {
 
     @Getter
     private final Map<ServerInfo, TopCache> topCache = new HashMap<>();
+
+    @Getter
+    @Setter
+    private boolean nickReattempt = false;
 
     public GlobalUserManager() {
         DataManager.getInstance().setGlobalUserManager(this);
@@ -68,29 +74,36 @@ public class GlobalUserManager {
     }
 
     public void startTopUpdate(int interval) {
-        for (TopCache topCache : this.topCache.values()) {
+        for (TopCache topCache : topCache.values()) {
             topCache.startUpdate(interval);
         }
     }
 
     public void stopTopCache() {
-        this.topCache.values().forEach(TopCache::stop);
+        topCache.values().forEach(TopCache::stop);
     }
 
     public void loadTop() {
-        for (TopCache cache : this.topCache.values())
+        for (TopCache cache : topCache.values())
             cache.load();
     }
 
     @NotNull
     public GlobalUser getOrCreateGlobalUser(UUID uniqueID) {
-        return this.loadedUsers.containsKey(uniqueID) ? this.loadedUsers.get(uniqueID) : createGlobalUser(uniqueID);
+        return loadedUsers.containsKey(uniqueID) ? loadedUsers.get(uniqueID) : createGlobalUser(uniqueID);
     }
 
     @NotNull
     public GlobalUser createGlobalUser(UUID uniqueID) {
         GlobalUser user = new GlobalUser(uniqueID);
         this.loadedUsers.put(uniqueID, user);
+
+        // Attempt to update his local username.
+        User localUser = DataManager.getInstance().getLocalUserManager().getUser(uniqueID);
+        if (localUser != null && localUser.getLastKnownName() != null) {
+            user.setLastKnownName(localUser.getLastKnownName());
+        }
+
         return user;
     }
 
@@ -116,44 +129,60 @@ public class GlobalUserManager {
         return this.loadedUsers.get(uniqueID);
     }
 
-    public GlobalUser getGlobalUser(String name) {
-        return this.loadedUsers.values().stream()
-                .filter(u -> u.getLastKnownName() != null && u.getLastKnownName().equals(name))
-                .findAny().orElseGet(() -> loadGlobalUser(name));
-    }
-
-    public GlobalUser loadGlobalUser(String name) {
-
-        if (checkEmpty())
-            return null;
-
-        GlobalUser user = null;
-
-        for (Map.Entry<ServerInfo, MySQLStorage> entry : remoteStorages.entrySet()) {
-            User remoteUser = entry.getValue().loadUser(name).join();
-
-            if (remoteUser == null) continue;
-
-            if (user == null)
-                user = new GlobalUser(remoteUser.getUniqueID());
-
-            user.updateRecord(entry.getKey(), remoteUser);
-        }
-
-        if (user != null)
-            CommonLogger.getImplementation().debug("Updated global user " + user.getUniqueID());
-        else
-            CommonLogger.getImplementation().debug("Could not load global user " + name);
-        return user;
+    @Nullable
+    public UUID mapUsername(@NotNull String name) {
+        GlobalUser user = getGlobalUser(name);
+        return user == null ? null : user.getUniqueID();
     }
 
     @Nullable
-    public UUID mapUsername(String name) {
+    public GlobalUser getGlobalUser(@NotNull String name) {
+        Objects.requireNonNull(name, "Cannot query by null name.");
+
         return this.loadedUsers.values().stream()
-                .filter(u -> u.getLastKnownName() != null && u.getLastKnownName().equals(name))
-                .map(GlobalUser::getUniqueID)
-                .findAny()
-                .orElse(Optional.ofNullable(loadGlobalUser(name)).map(GlobalUser::getUniqueID).orElse(null));
+                .filter(u -> name.equals(u.getLastKnownName()))
+                .findAny().orElse(null);
+    }
+
+    public CompletableFuture<Void> loadGlobalUser(@NotNull String name) {
+        Objects.requireNonNull(name, "Cannot load a user by null name.");
+
+        if (checkEmpty())
+            return CompletableFuture.completedFuture(null);
+
+        if (nameLoadCache.isLoading(name))
+            return nameLoadCache.getLoading(name);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        nameLoadCache.setLoading(name, future);
+
+        final AtomicReference<GlobalUser> user = new AtomicReference<>();
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (Map.Entry<ServerInfo, MySQLStorage> entry : remoteStorages.entrySet()) {
+            CompletableFuture<Void> userFuture = entry.getValue().loadUser(name).thenAcceptAsync(remoteUser -> {
+                if (remoteUser == null)
+                    return;
+
+                if (user.get() == null)
+                    user.set(new GlobalUser(remoteUser.getUniqueID()));
+
+                user.get().updateRecord(entry.getKey(), remoteUser);
+                CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString());
+            });
+
+            userFuture.exceptionally(e -> {
+                CommonLogger.getImplementation().warn("Could not load remote " + entry.getKey().toString() + " for user " + user.get().toString());
+                e.printStackTrace();
+                return null;
+            });
+
+            futures.add(userFuture);
+        }
+
+        future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        return future;
     }
 
     /**
@@ -184,6 +213,11 @@ public class GlobalUserManager {
                     return;
                 }
                 CommonLogger.getImplementation().debug("Queried time for " + user.toString() + " from " + entry.getKey().toString() + ", doesn't have an account there.");
+
+                if (nickReattempt && user.getLastKnownName() != null) {
+                    loadGlobalUser(user.getLastKnownName());
+                    CommonLogger.getImplementation().debug("Reattempting with his username " + user.getLastKnownName());
+                }
             });
 
             userFuture.exceptionally(e -> {

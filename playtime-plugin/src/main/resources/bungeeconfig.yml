@@ -29,6 +29,9 @@ storage:
     password: 'password'
     database: 'playtime'
 
+    # Reattempt loading with username?
+    nick-reattempt: true
+
     # Table to use for local times.
     table: 'play-time'
 

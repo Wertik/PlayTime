@@ -4,6 +4,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.jetbrains.annotations.Nullable;
 import space.devport.wertik.playtime.bungee.BungeePlayTimePlugin;
 import space.devport.wertik.playtime.bungee.utils.BungeeStringUtil;
 import space.devport.wertik.playtime.struct.GlobalUser;
@@ -71,25 +72,50 @@ public class BungeePlayTimeCommand extends Command {
 
                     player = (ProxiedPlayer) sender;
                     globalUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
+
+                    if (globalUser == null) {
+                        sender.sendMessage(BungeeStringUtil.format("&7&oLoading the user..."));
+                        plugin.getGlobalUserManager().loadGlobalUser(player.getUniqueId())
+                                .thenRunAsync(() -> {
+                                    GlobalUser loadedUser = plugin.getGlobalUserManager().getGlobalUser(player.getUniqueId());
+                                    printUserInfo(sender, loadedUser);
+                                });
+                        return;
+                    }
                 } else {
                     globalUser = plugin.getGlobalUserManager().getGlobalUser(args[1]);
+
+                    if (globalUser == null) {
+                        sender.sendMessage(BungeeStringUtil.format("&7&oLoading the user..."));
+                        plugin.getGlobalUserManager().loadGlobalUser(args[1])
+                                .thenRunAsync(() -> {
+                                    GlobalUser loadedUser = plugin.getGlobalUserManager().getGlobalUser(args[1]);
+                                    printUserInfo(sender, loadedUser);
+                                });
+                        return;
+                    }
                 }
 
-                if (globalUser == null) {
-                    sender.sendMessage(BungeeStringUtil.format("&cPlayer has no record over all connected servers."));
-                    return;
-                }
-
-                StringBuilder message = new StringBuilder("&8&m    &3 Global Play Times");
-                for (ServerInfo serverInfo : globalUser.getUserRecord().keySet()) {
-                    message.append("\n&8 - &f%serverName% &8= &r%time%"
-                            .replace("%serverName%", serverInfo.getName())
-                            .replace("%time%", DurationFormatUtils.formatDuration(globalUser.getPlayedTime(serverInfo), plugin.getDurationFormat())));
-                }
-                sender.sendMessage(BungeeStringUtil.format(message.toString()));
+                printUserInfo(sender, globalUser);
                 break;
             default:
                 sender.sendMessage(BungeeStringUtil.format("&cInvalid sub command."));
         }
+    }
+
+    private void printUserInfo(CommandSender sender, @Nullable GlobalUser user) {
+
+        if (user == null) {
+            sender.sendMessage(BungeeStringUtil.format("&cPlayer has no record over all connected servers."));
+            return;
+        }
+
+        StringBuilder message = new StringBuilder("&8&m    &3 Global Play Times");
+        for (ServerInfo serverInfo : user.getUserRecord().keySet()) {
+            message.append("\n&8 - &f%serverName% &8= &r%time%"
+                    .replace("%serverName%", serverInfo.getName())
+                    .replace("%time%", DurationFormatUtils.formatDuration(user.getPlayedTime(serverInfo), plugin.getDurationFormat())));
+        }
+        sender.sendMessage(BungeeStringUtil.format(message.toString()));
     }
 }
